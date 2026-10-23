@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-labs:
+    name: Verify vuln-lab (Python ${{ matrix.python-version }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Show Python version
+        run: python --version
+
+      # ---------------------------------------------------------------
+      # 核心驗證：9 個靶場（漏洞版應全數觸發、修補版應全數失效）
+      # 只用標準庫，不需要額外依賴
+      # ---------------------------------------------------------------
+      - name: Run lab verification pipeline
+        run: python vuln-lab/run_all.py --quick
+
+      # ---------------------------------------------------------------
+      # 單元測試：INDEX.md 產生器
+      # ---------------------------------------------------------------
+      - name: Run unit tests
+        run: python vuln-lab/tests/test_summary.py -v
+
+      # ---------------------------------------------------------------
+      # 確認 INDEX.md 可重現（若不同代表有人手改或靶場變動未重跑）
+      # ---------------------------------------------------------------
+      - name: Check INDEX.md is up to date
+        shell: pwsh
+        run: |
+          python vuln-lab/summary.py
+          $status = git status --porcelain -- vuln-lab/INDEX.md
+          if ($status) {
+            Write-Error "INDEX.md 不是最新的，請執行 python vuln-lab/summary.py 並提交"
+            git diff -- vuln-lab/INDEX.md
+            exit 1
+          }
+          Write-Host "✓ INDEX.md 是最新的"
+
+      # ---------------------------------------------------------------
+      # 上傳驗證結果（即使失敗也上傳，方便除錯）
+      # ---------------------------------------------------------------
+      - name: Upload verification artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-results-py${{ matrix.python-version }}
+          path: |
+            vuln-lab/findings/pipeline_report.json
+            vuln-lab/INDEX.md
+          if-no-files-found: warn
+          retention-days: 14
+
+  # -----------------------------------------------------------------
+  # 敏感資料掃描：確保沒有密碼/私鑰被誤提交
+  # -----------------------------------------------------------------
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for secrets
+        shell: bash
+        run: |
+          set -e
+          echo "=== 掃描高風險檔案與內容 ==="
+          FAIL=0
+
+          # 1. 敏感檔名
+          if git ls-files | grep -Ei 'natas_pw|\.pem$|\.key$|id_rsa|credential|\.ovpn$|\.p12$'; then
+            echo "❌ 發現敏感檔名"
+            FAIL=1
+          fi
+
+          # 2. 私鑰內容
+          if git grep -lE 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY' -- . ':!*.md' ':!*.html'; then
+            echo "❌ 發現私鑰"
+            FAIL=1
+          fi
+
+          # 3. GitHub/OpenAI token
+          if git grep -lE '(gh[pousr]_[A-Za-z0-9]{36,}|sk-[A-Za-z0-9]{32,})' -- . ':!*.md' ':!*.html'; then
+            echo "❌ 發現 token"
+            FAIL=1
+          fi
+
+          # 4. 靶場產物不該進版控
+          if git ls-files | grep -E '\.(db|phar)$'; then
+            echo "❌ 發現產生的二進位"
+            FAIL=1
+          fi
+
+          if [ $FAIL -ne 0 ]; then
+            echo ""
+            echo "請從版控移除上述檔案，並加入 .gitignore"
+            exit 1
+          fi
+          echo "✓ 無敏感檔案"
