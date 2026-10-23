@@ -1,0 +1,21 @@
+# 統一換行符，避免 Windows/Linux/CI 之間的假差異
+* text=auto
+
+# 原始碼與文件一律 LF（跨平台一致）
+*.py   text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.txt  text eol=lf
+*.ps1  text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# 二進位（不做換行轉換）
+*.db    binary
+*.phar  binary
+*.png   binary
+*.jpg   binary
+*.gif   binary
+*.zip   binary
