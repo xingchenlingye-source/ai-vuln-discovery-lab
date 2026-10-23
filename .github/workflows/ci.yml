@@ -14,6 +14,10 @@ jobs:
   verify-labs:
     name: Verify vuln-lab (Python ${{ matrix.python-version }})
     runs-on: windows-latest
+    # Windows runner 預設 cp1252，中文輸出會 UnicodeEncodeError
+    env:
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
     strategy:
       fail-fast: false
       matrix:

@@ -12,6 +12,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+# Windows CI（cp1252）輸出中文會 UnicodeEncodeError，強制 UTF-8
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
 # 不是「主程式」的檔名規則
 _EXCLUDED_PREFIXES = ("verify_", "gen_")
 _EXCLUDED_NAMES = {"run_all.py", "summary.py"}

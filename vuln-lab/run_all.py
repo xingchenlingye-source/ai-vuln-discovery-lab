@@ -41,6 +41,14 @@ import sys
 import time
 from datetime import datetime, timezone
 
+# Windows CI（cp1252）輸出中文會 UnicodeEncodeError，強制 UTF-8
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 # 本檔位於 vuln-lab/ 之下，所以 HERE 就是 lab 根目錄。
 # （先前的版本誤把 LAB 設成父目錄，導致所有靶場都被判定為「檔案不存在」。）
