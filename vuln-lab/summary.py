@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 # Windows CI（cp1252）輸出中文會 UnicodeEncodeError，強制 UTF-8
