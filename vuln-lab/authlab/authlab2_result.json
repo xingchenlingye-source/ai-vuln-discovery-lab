@@ -1,0 +1,37 @@
+[
+  {
+    "name": "W1 弱密碼雜湊（無 salt MD5）",
+    "owasp": "CWE-916",
+    "present": true
+  },
+  {
+    "name": "W2 使用者列舉（錯誤訊息不一致）",
+    "owasp": "A07 / CWE-204",
+    "present": true
+  },
+  {
+    "name": "W3 無速率限制（可暴力破解）",
+    "owasp": "A07 / CWE-307",
+    "present": true
+  },
+  {
+    "name": "W4 會話固定（Session Fixation）",
+    "owasp": "A07 / CWE-384",
+    "present": true
+  },
+  {
+    "name": "W5 過期會話仍有效（無逾時）",
+    "owasp": "A07 / CWE-613",
+    "present": true
+  },
+  {
+    "name": "W6 登出未真正失效",
+    "owasp": "A07 / CWE-613",
+    "present": true
+  },
+  {
+    "name": "W7 垂直越權（提權為 admin）",
+    "owasp": "A01 / CWE-269",
+    "present": true
+  }
+]

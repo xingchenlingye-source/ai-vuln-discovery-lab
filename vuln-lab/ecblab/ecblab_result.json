@@ -1,0 +1,22 @@
+[
+  {
+    "name": "E1 ECB 模式（重複 block 可偵測）",
+    "cwe": "CWE-327",
+    "present": true
+  },
+  {
+    "name": "E2 對照：直接注入被 addslashes 擋住",
+    "cwe": "防護觀察",
+    "present": true
+  },
+  {
+    "name": "E3 Block Splicing（繞過 addslashes）",
+    "cwe": "CWE-353",
+    "present": true
+  },
+  {
+    "name": "安全對照：AES-GCM 阻擋篡改",
+    "cwe": "防護驗證",
+    "present": true
+  }
+]

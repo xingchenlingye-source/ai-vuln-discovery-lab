@@ -1,0 +1,65 @@
+# =============================================================================
+# .gitignore — 教學靶場專案
+# =============================================================================
+# 本專案刻意含漏洞，但**私鑰絕不該進版控**。
+# 這是 A03 供應鏈安全的基本紀律，也是最常見的疏失之一。
+# =============================================================================
+
+# --- 私鑰與密鑰（最高優先）---
+vuln-lab/supplychain-lab/keys/
+**/*private*.json
+**/*.pem
+**/*.key
+vuln-lab/supplychain-lab/.sbom_key
+vuln-lab/buyLab/.buylab_secret
+# Natas 解題密碼（敏感，不進版控）
+**/natas_pw.json
+
+# --- 執行期產物 ---
+**/__pycache__/
+**/*.pyc
+vuln-lab/**/work/
+**/*.log
+**/*.db
+**/*.jsonl
+# 產生的 PHAR（靶場產物，可重建）
+**/*.phar
+# 環境變數與 VPN 設定
+.env
+.env.*
+**/*.ovpn
+
+# --- git 備份（含舊歷史，絕不可進版控）---
+.git.bak/
+
+# --- 靶場產生的報告（可重建）---
+vuln-lab/findings/
+vuln-lab/**/findings_*.txt
+vuln-lab/**/dependency_tree*.json
+vuln-lab/**/scan_result.json
+# 注意：*_result.json 刻意保留（僅 ~19 KB）
+# 它們是「驗證通過」的機器可讀證據，是靶場品質的憑據，不該被丟棄。
+
+# --- 工作區（superpowers）---
+.worktrees/
+.superpowers/
+
+# --- 建置產物 ---
+**/*.exe
+**/*.dll
+**/*.bin
+
+# --- 例外：這些要保留 ---
+!vuln-lab/**/*.py
+!vuln-lab/**/*.md
+!vuln-lab/**/*.c
+!vuln-lab/**/*.ps1
+!vuln-lab/**/*.txt
+!vuln-lab/.github/workflows/*.yml
+
+# =============================================================================
+# --- Natas 相關內容（不公開，遵守 OverTheWire 規則）---
+# 注意：必須放在上面的「例外」之後，否則 !vuln-lab/**/*.md 會把報告重新包含
+# =============================================================================
+vuln-lab/external-lab/**
+vuln-lab/S2*_natas*.md

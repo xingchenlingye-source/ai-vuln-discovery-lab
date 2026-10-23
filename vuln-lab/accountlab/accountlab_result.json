@@ -1,0 +1,47 @@
+[
+  {
+    "name": "A1 使用者列舉",
+    "cwe": "CWE-204",
+    "present": true
+  },
+  {
+    "name": "A2 密碼重置 token 可預測",
+    "cwe": "CWE-330 / CWE-640",
+    "present": true
+  },
+  {
+    "name": "A3 重置 token 可重放",
+    "cwe": "CWE-613",
+    "present": true
+  },
+  {
+    "name": "A4 重置後舊 session 仍有效",
+    "cwe": "CWE-613",
+    "present": true
+  },
+  {
+    "name": "A5 改密碼不需舊密碼",
+    "cwe": "CWE-620",
+    "present": true
+  },
+  {
+    "name": "A6 Host 標頭注入（重置連結投毒）",
+    "cwe": "CWE-640",
+    "present": true
+  },
+  {
+    "name": "B1 短信轟炸（無速率限制）",
+    "cwe": "CWE-799",
+    "present": true
+  },
+  {
+    "name": "B2 短信驗證碼可爆破",
+    "cwe": "CWE-307",
+    "present": true
+  },
+  {
+    "name": "X1 XSS 盲打（含 callback 接收）",
+    "cwe": "CWE-79",
+    "present": true
+  }
+]

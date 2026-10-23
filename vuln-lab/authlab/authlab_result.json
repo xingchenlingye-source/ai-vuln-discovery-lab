@@ -1,0 +1,32 @@
+[
+  {
+    "name": "V1 IDOR 水平越權",
+    "owasp": "A01 / CWE-639",
+    "present": true
+  },
+  {
+    "name": "V2 缺省允許（CWE-862）",
+    "owasp": "A01 / CWE-862",
+    "present": true
+  },
+  {
+    "name": "V3 錯誤訊息洩漏",
+    "owasp": "A10 / CWE-209",
+    "present": true
+  },
+  {
+    "name": "V4 資源未釋放",
+    "owasp": "A10 / CWE-460",
+    "present": true
+  },
+  {
+    "name": "V5 未檢查回傳值（靜默失敗）",
+    "owasp": "A10 / CWE-252 / CWE-391",
+    "present": true
+  },
+  {
+    "name": "V6 fail-open 認證",
+    "owasp": "A10 / CWE-636",
+    "present": true
+  }
+]

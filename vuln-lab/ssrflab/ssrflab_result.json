@@ -1,0 +1,32 @@
+[
+  {
+    "name": "S1 直接存取內網服務（無防護）",
+    "owasp": "CWE-918",
+    "present": true
+  },
+  {
+    "name": "S2 白名單邏輯可被繞過（靜態分析 + 變體測試）",
+    "owasp": "CWE-918",
+    "present": true
+  },
+  {
+    "name": "S3 用 302 重導向繞過驗證",
+    "owasp": "CWE-918",
+    "present": true
+  },
+  {
+    "name": "S4 讀取雲端 metadata 憑證",
+    "owasp": "CWE-918 / CWE-522",
+    "present": true
+  },
+  {
+    "name": "S5 內部服務無認證（橫向移動）",
+    "owasp": "CWE-306",
+    "present": true
+  },
+  {
+    "name": "安全對照：/fetch-safe 正確阻擋",
+    "owasp": "防護驗證",
+    "present": true
+  }
+]

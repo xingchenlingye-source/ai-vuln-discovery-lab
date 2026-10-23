@@ -1,0 +1,32 @@
+[
+  {
+    "name": "C1 DEBUG 模式洩漏堆疊追蹤",
+    "owasp": "A02 / CWE-489",
+    "present": true
+  },
+  {
+    "name": "C2 缺少安全標頭（6 項全缺）",
+    "owasp": "A02 / CWE-693",
+    "present": true
+  },
+  {
+    "name": "C3 CORS 萬用字元 + credentials",
+    "owasp": "A02 / CWE-942",
+    "present": true
+  },
+  {
+    "name": "C4 預設憑證未變更（3 組全部可登入）",
+    "owasp": "A02 / CWE-1392",
+    "present": true
+  },
+  {
+    "name": "C5 允許危險 HTTP 方法",
+    "owasp": "A02 / CWE-749",
+    "present": true
+  },
+  {
+    "name": "C6 設定與密鑰洩漏",
+    "owasp": "A02 / CWE-200",
+    "present": true
+  }
+]

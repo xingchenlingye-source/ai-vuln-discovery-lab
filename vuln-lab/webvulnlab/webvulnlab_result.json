@@ -1,0 +1,37 @@
+[
+  {
+    "name": "U 文件上傳（黑名單不完整）",
+    "cwe": "CWE-434",
+    "present": true
+  },
+  {
+    "name": "O CORS 配置錯誤（萬用字元 + 反射 + 憑證）",
+    "cwe": "CWE-942",
+    "present": true
+  },
+  {
+    "name": "T SSTI 服務端模板注入",
+    "cwe": "CWE-1336",
+    "present": true
+  },
+  {
+    "name": "Cr CRLF 注入（標頭注入）",
+    "cwe": "CWE-113",
+    "present": true
+  },
+  {
+    "name": "R URL 重定向（開放重導向）",
+    "cwe": "CWE-601",
+    "present": true
+  },
+  {
+    "name": "J JSONP 劫持（跨域資訊洩漏）",
+    "cwe": "CWE-346",
+    "present": true
+  },
+  {
+    "name": "A 未授權訪問（內部 API）",
+    "cwe": "CWE-862",
+    "present": true
+  }
+]

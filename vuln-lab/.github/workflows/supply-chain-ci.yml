@@ -1,0 +1,125 @@
+# =============================================================================
+# supply-chain-ci.yml — 供應鏈安全 CI 管線
+# =============================================================================
+# 對應研究報告 CH06 S1（OWASP A03）與 CH02.1（驗證分離）。
+#
+# 這個 workflow 示範 A03 官方建議的四項可自動化措施：
+#   1. 依賴漏洞掃描（含間接依賴樹）
+#   2. SBOM 產生與保存
+#   3. 供應鏈簽章（非對稱，含信任鏈）
+#   4. 定期重掃（排程）—— 因為「今天安全」不代表「明天安全」
+#
+# ⚠ 注意：本專案的所有靶場都是「刻意含漏洞的教學素材」。
+#    在真實專案中，這個 workflow 會因為偵測到漏洞而**失敗**（這正是它的目的）。
+#    本檔示範的是「流程」，不是「這個 repo 的通過狀態」。
+# =============================================================================
+
+name: Supply Chain Security
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  schedule:
+    # 每週一 03:00 UTC 重掃 —— A03 官方建議的「持續清查」
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-scan:
+    name: 依賴漏洞掃描（含間接依賴樹）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 展開依賴樹並查詢 OSV
+        working-directory: vuln-lab/supplychain-lab
+        run: |
+          python analyze_tree.py requirements-vulnerable.txt || true
+          echo "--- 直接依賴掃描 ---"
+          python scan_deps.py requirements-vulnerable.txt || true
+
+      - name: 上傳依賴樹報告
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-tree
+          path: vuln-lab/supplychain-lab/dependency_tree.json
+
+  sbom-and-sign:
+    name: SBOM 產生與簽章
+    runs-on: ubuntu-latest
+    needs: dependency-scan
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 產生 SBOM（CycloneDX）
+        working-directory: vuln-lab/supplychain-lab
+        run: python sbom.py generate requirements-vulnerable.txt sbom.json
+
+      - name: 產生非對稱金鑰與信任鏈
+        working-directory: vuln-lab/supplychain-lab
+        run: |
+          python rsa_sign.py keygen
+          python rsa_sign.py issue-cert
+
+      - name: 簽署 SBOM（私鑰）
+        working-directory: vuln-lab/supplychain-lab
+        run: python rsa_sign.py sign sbom.json
+
+      - name: 驗證信任鏈（僅用公鑰）
+        working-directory: vuln-lab/supplychain-lab
+        run: python rsa_sign.py verify sbom.json sbom.json.rsa.asc
+
+      - name: 上傳 SBOM 與簽章
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-signed
+          path: |
+            vuln-lab/supplychain-lab/sbom.json
+            vuln-lab/supplychain-lab/sbom.json.rsa.asc
+
+  # ★ 真實 CI 中，「私鑰」必須來自 secrets，絕不可進版控
+  #   本專案為教學示範，故金鑰為執行時即時產生。
+  #   - name: Sign with Cosign (production)
+  #     run: cosign sign-blob --key env://COSIGN_KEY sbom.json
+
+  verification-pipeline:
+    name: 統一驗證管線（五種驗證型態）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 執行 9 個靶場的驗證
+        working-directory: vuln-lab
+        run: python run_all.py --quick
+
+      - name: 上傳管線報告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-report
+          path: vuln-lab/findings/pipeline_report.json
+
+  scheduled-rescan:
+    name: 定期重掃提醒
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - name: 說明
+        run: |
+          echo "本 job 由排程觸發（每週一）。"
+          echo "A03 的核心要求是『持續清查』——"
+          echo "今天通過不代表下週通過，因為新的 CVE 每天都在公布。"

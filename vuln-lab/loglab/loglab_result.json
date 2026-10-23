@@ -1,0 +1,32 @@
+[
+  {
+    "name": "L1 登入失敗不記錄",
+    "cwe": "A09 / CWE-778",
+    "present": true
+  },
+  {
+    "name": "L2 關鍵操作無審計日誌",
+    "cwe": "A09 / CWE-778",
+    "present": true
+  },
+  {
+    "name": "L4 暴力破解無告警",
+    "cwe": "A09 / CWE-778",
+    "present": true
+  },
+  {
+    "name": "L5 日誌檔無保護（可被清除）",
+    "cwe": "A09 / CWE-732",
+    "present": true
+  },
+  {
+    "name": "L6 無關聯 ID（無法串連事件）",
+    "cwe": "A09 / CWE-778",
+    "present": true
+  },
+  {
+    "name": "L3 日誌含明文敏感資料",
+    "cwe": "A09 / CWE-532",
+    "present": true
+  }
+]

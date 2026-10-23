@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-10-15T08:06:30.170787+00:00",
+  "passed": 0,
+  "checked": 9,
+  "results": [
+    {
+      "name": "authlab",
+      "ok": false,
+      "error": "檔案不存在"
+    },
+    {
+      "name": "authlab2",
+      "ok": false,
+      "error": "檔案不存在"
+    },
+    {
+      "name": "loglab",
+      "ok": false,
+      "error": "檔案不存在"
+    },
+    {
+      "name": "buyLab",
+      "ok": false,
+      "error": "檔案不存在"
+    },
+    {
+      "name": "configlab",
+      "ok": false,
+      "error": "檔案不存在"
+    },
+    {
+      "name": "authlab-patched",
+      "ok": false,
+      "error": "檔案不存在"
+    },
+    {
+      "name": "loglab-patched",
+      "ok": false,
+      "error": "檔案不存在"
+    },
+    {
+      "name": "buyLab-patched",
+      "ok": false,
+      "error": "檔案不存在"
+    },
+    {
+      "name": "configlab-patched",
+      "ok": false,
+      "error": "檔案不存在"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+﻿Google OSS-Fuzz Harnesses AI to Expose 26 Security Vulnerabilities - Infosecurity Magazine
+Infosecurity Magazine Home
+Google OSS-Fuzz Harnesses AI to Expose 26 Hidden Security Vulnerabilities
+Google OSS-Fuzz Harnesses AI to Expose 26 Hidden Security Vulnerabilities
+Infosecurity Magazine
+Researchers from Google’s OSS-Fuzz team have successfully used AI to identify 26 vulnerabilities in open-source projects maintainers.
+These included a flaw that has existed for two decades in the OpenSSL library (CVE-2024-9143), a software library that most HTTPS websites rely on.
+The OSS-Fuzz team has supported open-source maintainers in fixing x over 11,000 vulnerabilities over the past eight years as part of the Google Open Source Security Team.
+However, the 26 newly identified vulnerabilities are among the first to be detected by OSS-Fuzz with the help of generative AI.
+Specifically, the Google researchers used a framework based on a large language model (LLM) trained in-house to generate more fuzz targets.
+Fuzz testing, also known as fuzzing, is the most common way developers use to test software for vulnerabilities and bugs before they go into production.
+The method involves providing invalid, unexpected or random data as inputs to a computer program or software. The program is then monitored for exceptions such as crashes, failing built-in code assertions, or potential memory leaks.
+Fuzz targets are the specific areas of a program or system that are being tested or "fuzzed" by a fuzzer.
+’s ‘Big Sleep’ AI discovery of a real-world vulnerability, our OSS-Fuzz team identified and reported 26 vulnerabilities to open-source project maintainers by using AI-generated and enhanced fuzz targets. Read more here:
+https://t.co/6SfPt38ZmE
+&mdash; Heather Adkins - Ꜻ - Spes consilium non est (@argvee)
+LLM for Automating Fuzzing
+With Google’s framework, created in August 2023 and made open source in January 2024, the OSS-Fuzz researchers want to automate the manual process of developing a fuzz target.
+This process includes the five following steps:
+Drafting an initial fuzz target
+Fixing any compilation issues that arise
+Running the fuzz target to see how it performs, and fixing any obvious mistakes causing runtime issues
+Running the corrected fuzz target for a longer period, and triaging any crashes to determine the root cause
+Fixing vulnerabilities
+The researchers have managed to use their in-house LLM to automate the first two steps and are working on implementing the two following steps.
+Google Project Zero AI-Driven Approach for Vulnerability Research
+In parallel, researchers at Project Zero, another Google research team, have also built a framework using LLMs for vulnerability discovery.
+However, their approach is not built on enhanced fuzzing like the OSS-Fuzz team, but rather centered around the interaction between an AI agent and its set of specialized tools designed to mimic the workflow of a human security researcher and a target codebase.
+the Naptime framework
+The Project Zero researchers announced in early November 2024 that they found their first vulnerability using this method.
+While the researchers conceded that overall, fuzzing will continue to be as – or more – effective as LLM-assisted manual vulnerability analysis, they hope the Big Sleep approach can complement fuzzing techniques by detecting vulnerabilities where fuzzing failed.
+Read now: How to Disclose, Report and Patch a Software Vulnerability
+Infosecurity Europe: Patch Responsibility Remains Up for Grabs as AI Unearths Decades of Flaws
+Organizations Found to Address Only 21% of GenAI-Related Vulnerabilities
+Claude Desktop Extensions Vulnerable to Web-Based Prompt Injection
+Infosecurity Europe: Mythos Outperforms GPT5.5 on Google Chrome Vulnerability Exploits, Says New Benchmark
+Google Researchers Claim First Vulnerability Found Using AI
+What’s Hot on Infosecurity Magazine?
+Major French Supermarket Chains Hit by Cyber-Attack, Food Stock Impacted
+Months-Old Palo Alto VPN Vulnerability Remains a Target for Ransomware Groups
+Fifth of CISOs Take Time Off to Avoid Patch Tuesday
+UK Government Announces Sweeping New AI Security Plans
+Luna Moth Leaks Shed Light on Ransomware Group's Inner Workings
+Q3 2026 Sets New Record for Ransomware Attacks
+Major French Supermarket Chains Hit by Cyber-Attack, Food Stock Impacted
+Telegram Account Behind ASOS Rogue Notification Tied to Gaming Trading
+Attackers Hide AI Prompt Injections Inside Phishing Emails
+Who Authorized That Agent? Enforcing AI Authority Before the Action
+16:00, 8 October 2026
+Chinese Hacker Deployed AI in Campaign Against South Korean Banks
+Q3 2026 Sets New Record for Ransomware Attacks
+Who Authorized That Agent? Enforcing AI Authority Before the Action
+16:00, 8 October 2026
+Your Security Awareness Programme Isn't Failing, It's Just Not Relevant
+16:00, 17 September 2026
+From APIs to Agents: How to Secure AI at Enterprise Scale
+12:00, 17 September 2026
+Human Risk in Cybersecurity: Protecting Your Organization Beyond Technology
+The AI Fog: Turning Security Complexity into Confident Action
+10:30, 6 October 2026
+Frontier AI: How Cyber Defenders Can Harness the Defender’s Window
+16:00, 3 September 2026
+US: Critical Infrastructure Braces for Sweeping New Cyber Reporting Rules
+Microsoft: AI Cuts Post-Compromise Attack Time to Minutes
+The AI Fog: Turning Security Complexity into Confident Action
+10:30, 6 October 2026
+A CISO's Lessons in Ransomware Response and Recovery After a Real-World LockBit Attack
+New Chinese-Made ‘RatHat’ Android Malware Leverages AI to Steal Financial Data
+Why Space Infrastructure's Biggest Cyber Risk Never Leaves the Ground
+Copyright &copy; 2026 Reed Exhibitions Ltd.
+Intellectual property statement

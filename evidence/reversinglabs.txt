@@ -1,0 +1,129 @@
+﻿AI-based fuzzing targets open-source LLM vulnerabilities | RL Blog
+The inaugural Gartner® Magic Quadrant™ for Software Supply Chain Security is out
+ReversingLabs: The More Powerful, Cost-Effective Alternative to VirusTotal
+Get an Inside Look at Spectra Assure Community | Stop Trusting & Start Verifying Your Software
+[ANALYSIS] THE PATCH IS THE ATTACK PAYLOAD
+The Tale of ClickFix: How Malware-as-a-Service campaigns turn users into the ultimate execution vector
+Spectra Assure Free Trial
+Get your 14-day free trial of Spectra Assure for Software Supply Chain Security
+Spectra Assure Free Trial
+Cybersecurity Glossary
+All rights reserved ReversingLabs
+Secure Software Onboarding
+Secure Build & Release
+Verify AI Supply Chain
+Integrate Safe Open Source
+Increase Email Threat Resilience
+Detect Malware in File Shares & Storage
+Advanced Malware Analysis Suite
+ICAP Enabled Solutions
+Scalable File Analysis
+High-Fidelity Threat Intelligence
+Curated Ransomware Feed
+Automate Malware Analysis Workflows
+EDR Alert Enrichment & Validation
+Products & Technology
+Software Supply Chain Security
+High-Speed, High-Volume, Large File Analysis
+In-Depth Malware Analysis & Hunting for the SOC
+Authoritative Reputation Data & Intelligence
+Cybersecurity Glossary
+ConversingLabs Podcast
+Learning with ReversingLabs
+Weekly Insights Newsletter
+OpenSource YARA Rules
+Software Supply Chain Security
+Malware Analysis and Threat Hunting
+AppSec & Supply Chain Security
+AI-based fuzzing targets open-source LLM vulnerabilities
+Google researchers using OSS-Fuzz have identified 26 vulnerabilities, but experts warn that AI fuzzing is not a panacea for AI/ML security.
+, Freelance technology writer.
+How AI enhances the fuzzing process
+AI fuzzing: Drawbacks and limitations
+AI delivers better context for prompts
+Removing human touch in triage can help
+A comprehensive way to secure your ML models
+Google recently announced a milestone in finding vulnerabilities in open-source software using automated fuzzing tools enhanced by artificial intelligence (AI). Twenty-six new vulnerabilities — including a critical one in the OpenSSL library — were discovered in open-source projects. All were found using AI-generated and -enhanced fuzz targets.
+Google has been steadily improving its integration of AI into its open-source software fuzzing system since 2023, the researchers explained, resulting in increased code coverage for 272 C/C++ projects and more than 370,000 new lines of code. The news was explained in a
+by Google Open Source Security Team members
+Using the new AI-based fuzzing technique, the researchers discovered the new vulnerabilities, including the OpenSSL flaw, which has likely been present for two decades and wouldn&#x27;t have been discoverable with non-AI fuzz targets. One reason such bugs remain undiscovered for so long is that line coverage is not a guarantee that a function is free of bugs. Measuring all possible code paths and states can cause different flags, and configurations may trigger different behaviors, unearthing different bugs. This underscores the need to continue to generate new varieties of fuzz targets even for code that is already fuzzed, the researchers added.
+Here&#x27;s what your team can learn from the AI fuzzing technique for large-language models (LLMs) — and what you need to know about its drawbacks and limitations.
+How the Rise of AI Will Impact Software Supply Chain Security
+How AI enhances the fuzzing process
+Software continuously evolves, and new code changes can introduce fresh vulnerabilities not covered by previous fuzzing efforts, said John McShane, principal AI solutions manager at Black Duck Software. “Generating new fuzz targets increases coverage by exploring new execution paths, potentially uncovering complex bugs previously missed," McShane said. "It also helps detect if recent changes have reintroduced old vulnerabilities or created new ones."
+An advantage of integrating LLMs into fuzzing is speed, said Black Duck senior sales engineer Boris Cipot.
+AI can comb through large codebases faster than humans.  It can go through many more test cases in a shorter time frame.
+AI also delivers automation, which lowers the time needed for effective fuzzing and will also reduce cost, Cipot noted. “Due to the AI capability of learning, such systems can improve themselves by identifying malicious patterns over time. In this case, Google&#x27;s AI uncovered a vulnerability in OpenSSL hidden from human testers for decades. This means that it can also uncover edge cases that might not be apparent to human researchers.”
+AI can also enhance fuzzing by generating sophisticated and varied test inputs that increase the likelihood of uncovering hidden vulnerabilities, said McShane. It can improve efficiency by prioritizing code areas susceptible to bugs and continuously refining testing strategies through adaptive learning, he explained. “AI allows for scalable testing of large and complex codebases more effectively than manual methods, such as writing large amounts of unit tests."
+AI can quickly process vast codebases to identify patterns and areas prone to vulnerabilities that humans might overlook. It discovers non-obvious code interactions and generates complex inputs to trigger rare execution paths. AI systems continuously learn and adapt their fuzzing strategies based on real-time feedback without manual intervention. They can automate the creation of numerous fuzz targets simultaneously, which a human cannot do which can save thousands of hours of testing.
+AI fuzzing: Drawbacks and limitations
+As beneficial as AI can be to fuzzing, it can have drawbacks, Cipot said. “If technology can be used for good, it can also be used for bad. Malicious actors can take advantage of such tools by discovering vulnerabilities they can misuse for attacks,” he said.
+It’s also important to remember that AI is not always right, he said. “It can produce false positives, and it can also create tests under false assumptions, if not trained well. This is what we call AI hallucinations.”
+AI has the capability to learn, however these learnings can make it focus too much on known patterns and make it blind to new vulnerabilities.
+McShane also cautioned about the additional requirements for working safely with AI-generated code. “It’s important to validate that the code passes build-time and run-time tests, but it’s also wise to execute the AI-generated code in a sandbox to prevent it from doing anything malicious on your systems,” he said.
+There have been cases where AI-generated fuzz targets began overwriting files on a system due to how the fuzz target was written by the AI, as well as the payloads being passed to the target function.
+AI delivers better context for prompts
+A new improvement in OSS-Fuzz is aimed at the hallucination issue. That improvement allows more relevant context to be generated in the model’s prompts. “The more complete and relevant information we can provide the LLM about a project, the less likely it would be to hallucinate the missing details in its response,” the researchers wrote.
+“This meant providing more accurate, project-specific context in prompts, such as function, type definitions, cross references, and existing unit tests for each project,” they added. “To generate this information automatically, we built a new infrastructure to index projects across OSS-Fuzz.”
+Cipot explained that just as humans can misunderstand someone’s thoughts when they are taken out of context, AI can misunderstand the code. “Without context, the AI might generate inputs that are not relevant or are not actionable and therefore a waste of processing power and time,” he said.
+Without context, AI will create more false positives and will miss the actual functionality and structure of the code. Without context, AI will also lose the ability to learn correctly and improve over time.
+In addition to context, AI agents, which can perform autonomous tasks, can be deployed to reduce the risk of flaky information. “The use of agents when using a LLM can also help alert a user or model that a hallucination may have occurred,” McShane said. “The agent acts as a double-checking method to help keep the model ‘honest.’”
+Removing human touch in triage can help
+The Google Open Source Security Team researchers said that in the future they hope to create an agent-based architecture for their LLMs. That will allow the LLM to autonomously plan out the steps to solve a particular problem by providing it with access to tools that enable it to get more information, as well as to check and validate results. “By providing LLM with interactive access to real tools such as debuggers, we’ve found that the LLM is more likely to arrive at a correct result,” the researchers wrote.
+Another avenue of research they’re following is improving their system’s automated triaging capabilities to get to a point where they’re confident about not requiring human review.
+Black Duck&#x27;s Cipot said this presented some concern. "There are traps that such systems can fall in if left unattended,” he said. However, if maintained correctly, "they can reduce human error and bring efficiency, scalability, and guidance."
+[Automating] the triaging of vulnerabilities discovered by LLMs can bring prioritization of critical vulnerabilities and make sure that efforts are prioritized for the most pressing issues. It also ensures effectiveness despite the ever-growing codebase and vulnerability count. Such systems can also speed up the resolution time and suggest actionable results for developers.
+A comprehensive way to secure your ML models
+, senior director of product management at ReversingLabs, wrote recently that securing the ecosystem around machine-learning models is more critical than ever. In his
+technical outline of key product features in ReversingLabs Spectra Assure for securing ML models
+, Shah wrote that the required detection capabilities to ensure  environments remain safe at every stage of the ML model lifecycle include:
+Before you bring a third-party LLM model into your environment, check for unsafe function calls and suspicious behaviors and prevent hidden threats from compromising your system.
+Before you ship or deploy an LLM model
+that you’ve created, ensure it is free from supply chain threats by thoroughly analyzing it for any malicious behaviors.
+Make sure models saved in risky formats such as Pickle are meticulously scanned to detect any potential malware before they can impact your infrastructure.
+With such protections, you can confidently integrate, share, and deploy ML models without risking your system&#x27;s security, Shah wrote.
+AppSec & Supply Chain Security
+How AI enhances the fuzzing process
+AI fuzzing: Drawbacks and limitations
+AI delivers better context for prompts
+Removing human touch in triage can help
+A comprehensive way to secure your ML models
+Join the free Spectra Assure Community today
+to get hands-on with RL&#x27;s binary analysis-based software supply chain security platform.
+Update your AppSec strategy:
+AI has collapsed the exploit window. Now the patch is the payload. RL CEO and co-founder
+Mario Vuksan explains in this analysis
+Get up to speed on the agentic SOC
+Autonomy, Not Autopilot: Talking Agentic SOC
+. Plus: Learn about the new
+RL a supply chain security &#x27;visionary.&#x27;
+Gartner® Magic Quadrant™ for Software Supply Chain Security
+Get key insights into why
+binary analysis is a must-have control
+CISO Playbook for Commercial Software Supply Chain Security.
+on the state of software security with
+RL&#x27;s Software Supply Chain Security Report 2026
+the webinar discussing the findings
+Explore RL&#x27;s Spectra suite:
+for software supply chain security,
+for scalable file analysis,
+for malware analysis and threat hunting, and
+for reputation data and intelligence.
+Get the best of RL Blog delivered to your in-box weekly. Stay up to date on key trends, analysis and best practices across threat intelligence and software supply chain security.
+CRA compliance will be judged by the binary you ship
+Why the smartest LLMs are not-so-smart pen testers
+Can advanced math make AI systems safer?
+CRA compliance will be judged by the binary you ship
+With the EU Cyber Resilience Act’s Article 14 reporting requirements now live, executives need evidence drawn from the final software artifact.
+about CRA compliance will be judged by the binary you ship
+CRA compliance will be judged by the binary you ship
+Why the smartest LLMs are not-so-smart pen testers
+A new benchmark of eight leading AI systems shows that an intelligent model still needs a good context-rich harness.
+about Why the smartest LLMs are not-so-smart pen testers
+Why the smartest LLMs are not-so-smart pen testers
+Can advanced math make AI systems safer?
+Top mathematicians are hoping advanced mathematics and cryptographic techniques will help verify AI agents’ actions and claims.
+about Can advanced math make AI systems safer?
+Can advanced math make AI systems safer?
+AppSec & Supply Chain Security
+Products & Technology

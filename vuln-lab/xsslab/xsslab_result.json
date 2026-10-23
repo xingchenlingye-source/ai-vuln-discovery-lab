@@ -1,0 +1,27 @@
+[
+  {
+    "name": "1. 反射型 XSS",
+    "owasp": "A05 / CWE-79",
+    "present": true
+  },
+  {
+    "name": "2. 存儲型 XSS（含持久化驗證）",
+    "owasp": "A05 / CWE-79",
+    "present": true
+  },
+  {
+    "name": "3. DOM 型 XSS（靜態分析 sink）",
+    "owasp": "A05 / CWE-79",
+    "present": true
+  },
+  {
+    "name": "4. CSRF（無 token / 無 Origin 檢查 / 無 SameSite）",
+    "owasp": "A01 / CWE-352",
+    "present": true
+  },
+  {
+    "name": "5. XXE（外部實體展開）",
+    "owasp": "A05 / CWE-611",
+    "present": true
+  }
+]

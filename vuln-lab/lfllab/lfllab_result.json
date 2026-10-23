@@ -1,0 +1,27 @@
+[
+  {
+    "name": "L1 基本路徑穿越",
+    "cwe": "CWE-22 / CWE-98",
+    "present": true
+  },
+  {
+    "name": "L2 過濾 ../ 的繞過（....//）",
+    "cwe": "CWE-22",
+    "present": true
+  },
+  {
+    "name": "L3 絕對路徑讀取",
+    "cwe": "CWE-22",
+    "present": true
+  },
+  {
+    "name": "L4 php://filter 讀原始碼",
+    "cwe": "CWE-98",
+    "present": true
+  },
+  {
+    "name": "安全對照：/safe 正確阻擋",
+    "cwe": "防護驗證",
+    "present": true
+  }
+]

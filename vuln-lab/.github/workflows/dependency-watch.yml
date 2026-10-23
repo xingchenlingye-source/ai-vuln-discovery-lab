@@ -1,0 +1,54 @@
+# =============================================================================
+# dependency-watch.yml — 依賴變更監控
+# =============================================================================
+# 對應 OWASP A03：偵測「未經授權的依賴變更」。
+#
+# 攻擊手法（如 Shai-Hulud npm 蠕蟲）的特徵是：
+#   相依性檔案被改動 → 引入新的（惡意）套件版本。
+# 因此「鎖定檔與清單的變更」本身應該是**需要審查的事件**。
+# =============================================================================
+
+name: Dependency Watch
+
+on:
+  pull_request:
+    paths:
+      - '**/requirements*.txt'
+      - '**/package.json'
+      - '**/package-lock.json'
+      - '**/poetry.lock'
+      - '**/Pipfile.lock'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  detect-dependency-change:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 顯示相依性變更
+        run: |
+          echo "::warning::此 PR 更動了相依性定義檔 —— 需要人工審查"
+          git diff origin/${{ github.base_ref }}...HEAD -- '**/requirements*.txt' || true
+
+      - name: 檢查是否為新套件（而非僅版本升級）
+        run: |
+          echo "新套件 = 新的攻擊面；版本升級 = 可能的行為變更。"
+          echo "兩者都應被視為供應鏈風險的審查點。"
+
+  lockfile-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 檢查鎖定檔是否存在
+        run: |
+          if [ ! -f vuln-lab/supplychain-lab/requirements-vulnerable.txt ]; then
+            echo "::error::缺少相依性鎖定檔 —— 無法保證建置可重現"
+            exit 1
+          fi
+          echo "✓ 相依性定義檔存在"

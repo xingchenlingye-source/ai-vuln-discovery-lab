@@ -1,0 +1,32 @@
+[
+  {
+    "name": "B1 限購可繞過（check-then-act）",
+    "owasp": "A06 / CWE-799 / CWE-362",
+    "present": true
+  },
+  {
+    "name": "B2 TOCTOU 競態（超額扣款）",
+    "owasp": "A06 / CWE-367",
+    "present": true
+  },
+  {
+    "name": "B3 價格由客戶端提供",
+    "owasp": "A06 / CWE-472",
+    "present": true
+  },
+  {
+    "name": "B4 MD5 無 salt 儲存密碼",
+    "owasp": "A04 / CWE-916",
+    "present": true
+  },
+  {
+    "name": "B5 可預測的隨機 token",
+    "owasp": "A04 / CWE-338",
+    "present": true
+  },
+  {
+    "name": "B6 敏感資料明文儲存",
+    "owasp": "A04 / CWE-311",
+    "present": true
+  }
+]

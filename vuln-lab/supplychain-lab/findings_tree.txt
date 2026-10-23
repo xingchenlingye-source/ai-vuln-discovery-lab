@@ -1,0 +1,72 @@
+﻿==============================================================================
+ 間接依賴樹分析
+==============================================================================
+ 檔案      : requirements-vulnerable.txt
+ 直接依賴  : 8 個：Jinja2==2.10.1, PyYAML==5.1, requests==2.19.0, urllib3==1.24.1, Django==2.2.0, cryptography==2.6.1, lxml==4.3.0, Flask==1.0
+==============================================================================
+
+ 正在展開依賴樹（pip download 取得 metadata，不實際安裝）...
+
+  Jinja2                   2.10.1       （1 個間接依賴）
+  PyYAML                   5.1          （無依賴）
+    ⚠ metadata 取得失敗：ERROR: No matching distribution found for PyYAML==5.1
+  requests                 2.19.0       （4 個間接依賴）
+  urllib3                  1.24.1       （無依賴）
+  Django                   2.2.0        （2 個間接依賴）
+  cryptography             2.6.1        （無依賴）
+    ⚠ metadata 取得失敗：ERROR: No matching distribution found for cryptography==2.6.1
+  lxml                     4.3.0        （無依賴）
+    ⚠ metadata 取得失敗：ERROR: No matching distribution found for lxml==4.3.0
+  Flask                    1.0          （4 個間接依賴）
+    MarkupSafe                            （無依賴）
+      ⚠ metadata 取得失敗：              ^
+    chardet                               （無依賴）
+      ⚠ metadata 取得失敗：           ^
+    idna                                  （無依賴）
+      ⚠ metadata 取得失敗：        ^
+    certifi                               （無依賴）
+      ⚠ metadata 取得失敗：           ^
+    pytz                                  （無依賴）
+      ⚠ metadata 取得失敗：        ^
+    sqlparse                              （無依賴）
+      ⚠ metadata 取得失敗：            ^
+    Werkzeug                              （無依賴）
+      ⚠ metadata 取得失敗：            ^
+    itsdangerous                          （無依賴）
+      ⚠ metadata 取得失敗：                ^
+    click                                 （無依賴）
+      ⚠ metadata 取得失敗：         ^
+
+==============================================================================
+ 依賴樹統計
+==============================================================================
+  展開節點總數    : 17
+  直接依賴        : 8
+  間接依賴        : 9
+  爆炸倍數        : 2.1 倍
+------------------------------------------------------------------------------
+  間接依賴清單（這些是你『沒有直接引入』的套件）：
+    · certifi                  (由 requests 引入，深度 1)
+    · chardet                  (由 requests 引入，深度 1)
+    · click                    (由 Flask 引入，深度 1)
+    · idna                     (由 requests 引入，深度 1)
+    · itsdangerous             (由 Flask 引入，深度 1)
+    · MarkupSafe               (由 Jinja2 引入，深度 1)
+    · pytz                     (由 Django 引入，深度 1)
+    · sqlparse                 (由 Django 引入，深度 1)
+    · Werkzeug                 (由 Flask 引入，深度 1)
+
+==============================================================================
+ 為什麼這比只掃 requirements.txt 重要？
+==============================================================================
+
+  你的 requirements.txt 只有 8 行，但實際依賴樹有 17 個節點。
+  攻擊者只需要**其中一個**間接依賴有漏洞即可。
+
+  Log4Shell（CVE-2021-44228）就是典型案例：
+  許多專案從未直接引入 log4j-core，而是透過 spring-boot-starter-logging 進來。
+
+  → 這正是為什麼 OWASP A03 把「SBOM（含完整依賴樹）」列為核心措施：
+    你必須先知道「自己用了什麼」，才能回答「這次風暴我受不受影響」。
+
+（JSON 摘要已寫入 dependency_tree.json）

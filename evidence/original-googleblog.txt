@@ -1,0 +1,509 @@
+﻿Google Online Security Blog: Leveling Up Fuzzing: Finding more vulnerabilities with AI
+Security Blog
+The latest news and insights from Google on security and safety on the Internet
+Leveling Up Fuzzing: Finding more vulnerabilities with AI
+November 20, 2024
+Posted by Oliver Chang, Dongge Liu and Jonathan Metzman, Google Open Source Security Team
+Recently, OSS-Fuzz reported
+26 new vulnerabilities
+to open source project maintainers, including one vulnerability in the critical OpenSSL library (
+CVE-2024-9143
+) that underpins much of internet infrastructure. The reports themselves aren&#8217;t unusual&#8212;we&#8217;ve reported and helped maintainers fix over 11,000 vulnerabilities in the 8 years of the project.
+But these particular vulnerabilities represent a milestone for automated vulnerability finding: each was found with AI, using AI-generated and enhanced fuzz targets. The OpenSSL CVE is one of the first vulnerabilities in a critical piece of software that was discovered by LLMs, adding another real-world example to a recent Google discovery of
+an exploitable stack buffer underflow in the widely used database engine SQLite
+.
+This blog post discusses the results and lessons over a year and a half of work to bring AI-powered fuzzing to this point, both in introducing AI into fuzz target generation and expanding this to simulate a developer&#8217;s workflow.
+These efforts continue our explorations of how AI can transform vulnerability discovery and strengthen the arsenal of defenders everywhere.
+The story so far
+In August 2023, the OSS-Fuzz team announced
+AI-Powered Fuzzing
+, describing our effort to leverage large language models (LLM) to improve fuzzing coverage to find more vulnerabilities automatically&#8212;before malicious attackers could exploit them. Our approach was to use the coding abilities of an LLM to generate more fuzz targets, which are similar to unit tests that exercise relevant functionality to search for vulnerabilities.
+The ideal
+solution would be to completely automate the manual process of developing a fuzz target end to end:
+Drafting an initial fuzz target.
+Fixing any compilation issues that arise.
+Running the fuzz target to see how it performs, and fixing any obvious mistakes causing runtime issues.
+Running the corrected fu
+zz target for a longer period of time, and triaging any crashes to determine the root cause.
+Fixing vulnerabilities.
+In August 2023, w
+e
+covered our efforts
+to use an LLM to handle the first two steps. We were able to use an
+iterative process to generate a fuzz target
+with a simple prompt including hardcoded examples and compilation errors.
+In January 2024, we
+open sourced
+the
+framework
+that we were building to enable an LLM to generate fuzz targets. By that point, LLMs were reliably generating targets that exercised more interesting code coverage across 160 projects. But there was still a long tail of projects where we couldn&#8217;t get a single working AI-generated fuzz target.
+To address this, we&#8217;ve been improving the first two steps, as well as implementing steps 3 and 4.
+New results: More code coverage and discovered vulnerabilities
+We&#8217;re now able to automatically gain more coverage in
+272 C/C++ projects on OSS-Fuzz
+(up from 160), adding 370k+ lines of new code coverage. The top coverage improvement in a single project was an increase from 77 lines to 5434 lines (a 7000% increase).
+This led to the discovery of
+26 new vulnerabilities
+in projects on OSS-Fuzz that already had hundreds of thousands of hours of fuzzing. The highlight is
+CVE-2024-9143
+in the critical and well-tested OpenSSL library. We reported this vulnerability on September 16 and a fix was published on October 16. As far as we can tell, this vulnerability has likely been present for two decades and wouldn&#8217;t have been discoverable with existing fuzz targets written by humans.
+Another example was a bug in the project
+cJSON
+, where even though an existing human-written harness existed to fuzz a specific function, we still discovered a new vulnerability in that same function with an AI-generated target.
+One reason that such bugs could remain undiscovered for so long is that line coverage is not a guarantee that a function is free of bugs. Code coverage as a metric isn&#8217;t able to measure all possible code paths and states&#8212;different flags and configurations may trigger different behaviors, unearthing different bugs. These examples underscore the need to continue to generate new varieties of fuzz targets even for code that is already fuzzed, as has also been shown by Project Zero in the past (
+1
+,
+2
+).
+New improvements
+To achieve these results, we&#8217;ve been focusing on two major improvements:
+Automatically generate more relevant context in our prompts.
+The more complete and relevant information we can provide the LLM about a project, the less likely it would be to hallucinate the missing details in its response. This meant providing more accurate, project-specific context in prompts, such as function, type definitions, cross references, and existing unit tests for each project. To generate this information automatically, we
+built new infrastructure
+to index projects across OSS-Fuzz.
+LLMs turned out to be highly effective at
+emulating a typical developer&#8217;s entire workflow of writing, testing, and iterating on the fuzz target, as well as triaging the crashes found
+. Thanks to this, it was possible to further automate more parts of the fuzzing workflow. This additional iterative feedback in turn also resulted in higher quality and greater number of correct fuzz targets.
+The workflow in action
+Our LLM can now execute the first four steps of the developer&#8217;s process (with the fifth soon to come).
+1. Drafting an initial fuzz target
+A developer might check the source code, existing documentation and unit tests, as well as  usages of the target function when to draft an initial fuzz target. An LLM can fulfill this role here, if we provide a prompt with this information and ask it to come up with a fuzz target.
+Prompt:
+Your goal is to write a fuzzing harness for the provided function-under-test signature using &lt;code&gt;LLVMFuzzerTestOneInput&lt;/code&gt;. It is important that the provided solution compiles and actually calls the function-under-test specified by the function signature:
+&lt;function signature&gt;
+unsigned char * buffer_append_base64_decode(buffer *, const char *, size_t, base64_charset)
+&lt;/function signature&gt;
+Here is the source code of the function being tested:
+&lt;code&gt;
+unsigned char* buffer_append_base64_decode(buffer *out, const char* in, size_t in_length, base64_charset charset) {
+const size_t reserve = 3*(in_length/4) + 3;
+unsigned char * const result = (unsigned char *)
+buffer_string_prepare_append(out, reserve);
+const size_t out_pos =
+li_base64_dec(result, reserve, in, in_length, charset);
+buffer_commit(out, out_pos);
+return (out_pos || !in_length) ? result : NULL;
+}
+&lt;/code&gt;
+Here is the source code for functions which reference the function being tested:
+&lt;code&gt;
+&#8230;
+2. Fixing any compilation issues that arise.
+Once a developer has a candidate target, they would try to compile it and look at any compilation issues that arise. Again, we can prompt an LLM with details of the compilation errors so it can provide fixes.
+Prompt:
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+server_fuzzer.cc:12:46: error: only virtual member functions can be marked 'override'
+12 |   bool OnData(const char* data, size_t size) override {
+|                                              ^~~~~~~~
+server_fuzzer.cc:22:39: error: no type named 'MultiPartFile' in namespace 'httplib'
+22 |                        const httplib::MultiPartFile& file) override {
+|                              ~~~~~~~~~^
+server_fuzzer.cc:12:27: warning: unused parameter 'data' [-Wunused-parameter]
+12 |   bool OnData(const char* data, size_t size) override {
+|                           ^
+server_fuzzer.cc:37:5: error: use of undeclared 'operator()'
+37 |     operator()(request_data.data(), receiver);
+|     ^
+server_fuzzer.cc:27:23: warning: private field 'provider_' is not used [-Wunused-private-field]
+27 |   FuzzedDataProvider& provider_;
+|                       ^
+&lt;/error&gt;
+Example of compilation errors that an LLM was able to fix
+3. Running the fuzz target to see how it performs, and fixing any obvious mistakes causing runtime issues.
+Once all compilation errors are fixed, a developer would try running the fuzz target for a short period of time to see if there were any mistakes that led it to instantly crash, suggesting an error with the target rather than a bug discovered in the project.
+The following is an example of an LLM fixing a semantic issue with the fuzzing setup:
+LLM Response:
+&lt;explanation&gt;
+The issue is that `sqlite3_blob_open` requires the table to exist before you can open a blob on it. The fix ensures that the table exists by executing a `CREATE TABLE IF NOT EXISTS` statement before calling `sqlite3_blob_open`.
+Here's a breakdown of the changes:
+1. **Create Table Query:** A string `createTableQuery` is constructed to hold the SQL statement for creating the table. It uses the fuzzed values for the table and column names.
+2. **Prepare Statement:** `sqlite3_prepare_v2` is used to prepare the SQL statement from `createTableQuery`. This compiles the SQL into a byte-code program that SQLite can execute.
+3. **Execute Statement:** `sqlite3_step` executes the prepared statement. Since it's a `CREATE TABLE` statement, it doesn't return any data, but it creates the table if it doesn't exist.
+4. **Finalize Statement:** `sqlite3_finalize` destroys the prepared statement object when it's no longer needed.
+By adding these steps before calling `sqlite3_blob_open`, we ensure that the table exists, preventing the null pointer access issue.
+&lt;/explanation&gt;
+4. Running the corrected fuzz target for a longer period of time, and triaging any crashes.
+At this point, the fuzz target is ready to run for an extended period of time on a suitable fuzzing infrastructure, such as
+ClusterFuzz
+.
+Any discovered crashes would then need to be triaged, to determine the root causes and whether they represented legitimate vulnerabilities (or bugs in the fuzz target). An LLM can be prompted with the relevant context (stacktraces, fuzz target source code, relevant project source code) to perform this triage.
+Prompt: Given the following crash report, fuzz driver code and relevant project function code, analyze the cause of the crash.
+First, only answer &#8220;Crash is caused by bug in fuzz driver&#8221; or &#8220;Crash is caused by bug in project&#8221;. Second, offer a succinct and to-the-point analysis.
+Below is crash report:
+&lt;log&gt;
+AddressSanitizer: heap-use-after-free on address 0x502000000630 at pc 0x560036939242 bp 0x7ffd65dca850 sp 0x7ffd65dca010
+READ of size 1 at 0x502000000630 thread T0
+SCARINESS: 40 (1-byte-read-heap-use-after-free)
+#0 0x560036939241 in __asan_memcpy /src/llvm-project/compiler-rt/lib/asan/asan_interceptors_memintrinsics.cpp:63:3
+#1 0x56003697d30b in EmitLiteral&lt;false&gt; /src/snappy/snappy.cc:661:5
+#2 0x56003697d30b in snappy::internal::CompressFragment(char const*, unsigned long, char*, unsigned short*, int) /src/snappy/snappy.cc:954:10
+In this example, the LLM correctly determines this is a bug in the fuzz target, rather than a bug in the project being fuzzed.
+LLM Response: Crash is caused by bug in fuzz driver.
+The fuzz driver creates a vector of `iovec` structures, each pointing to a chunk of memory owned by the `FuzzedDataProvider`. However, the `data_chunk` vector, which holds the actual data pointed to by `iov_base`, is deallocated at the end of each fuzzer iteration when it goes out of scope. This leaves the `iov_base` pointers dangling. When `snappy::CompressFromIOVec` tries to access the memory pointed to by these dangling pointers, a heap-use-after-free occurs.
+5. Fixing vulnerabilities.
+The goal is to fully automate this entire workflow by having the LLM generate a suggested patch for the vulnerability. We don&#8217;t have anything we can share here today, but we&#8217;re collaborating with various researchers to make this a reality and look forward to sharing results soon.
+Up next
+Improving automated triaging:
+to get to a point where we&#8217;re confident about not requiring human review. This will help automatically report new vulnerabilities to project maintainers. There are likely more than the 26 vulnerabilities we&#8217;ve already reported upstream hiding in our results.
+Agent-based architecture:
+which means letting the LLM autonomously plan out the steps to solve a particular problem by providing it with access to tools that enable it to get more information, as well as to check and validate results. By providing LLM with interactive access to real tools such as debuggers, we&#8217;ve found that the LLM is more likely to arrive at a correct result.
+Integrating our research into OSS-Fuzz as a feature:
+to achieve a more fully automated end-to-end solution for vulnerability discovery and patching. We hope OSS-Fuzz will be useful for other researchers to evaluate AI-powered vulnerability discovery ideas and ultimately become a tool that will enable defenders to find more vulnerabilities before they get exploited.
+For more information, check out our open source framework at
+oss-fuzz-gen
+. We&#8217;re hoping to continue to collaborate on this area with other researchers. Also, be sure to check out the
+OSS-Fuzz blog
+for more technical updates.
+Google
+No comments
+:
+Post a Comment
+&#59530;
+&#58820;
+&#58824;
+Labels
+&#58821;
+#sharethemicincyber
+#supplychain #security #opensource
+AI Security
+android
+android security
+android tr
+app security
+big data
+biometrics
+blackhat
+C++
+chrome
+chrome enterprise
+chrome security
+connected devices
+CTF
+diversity
+encryption
+federated learning
+fuzzing
+Gboard
+google play
+google play protect
+hacking
+interoperability
+iot security
+kubernetes
+linux kernel
+memory safety
+Open Source
+pha family highlights
+pixel
+privacy
+private compute core
+Rowhammer
+rust
+Security
+security rewards program
+sigstore
+spyware
+supply chain
+targeted spyware
+tensor
+Titan M2
+VDP
+vulnerabilities
+workshop
+&#58055;
+Archive
+&#58821;
+&#58821;
+&#58821;
+&#160;
+2026
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2025
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58823;
+&#160;
+2024
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2023
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2022
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2021
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2020
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2019
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2018
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2017
+Dec
+Nov
+Oct
+Sep
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2016
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2015
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2014
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2013
+Dec
+Nov
+Oct
+Aug
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2012
+Dec
+Sep
+Aug
+Jun
+May
+Apr
+Mar
+Feb
+Jan
+&#58821;
+&#58821;
+&#160;
+2011
+Dec
+Nov
+Oct
+Sep
+Aug
+Jul
+Jun
+May
+Apr
+Mar
+Feb
+&#58821;
+&#58821;
+&#160;
+2010
+Nov
+Oct
+Sep
+Aug
+Jul
+May
+Apr
+Mar
+&#58821;
+&#58821;
+&#160;
+2009
+Nov
+Oct
+Aug
+Jul
+Jun
+Mar
+&#58821;
+&#58821;
+&#160;
+2008
+Dec
+Nov
+Oct
+Aug
+Jul
+May
+Feb
+&#58821;
+&#58821;
+&#160;
+2007
+Nov
+Oct
+Sep
+Jul
+Jun
+May
+Feed
+Follow @google
+Follow
+Give us feedback in our
+Product Forums
+.
+Google
+Privacy
+Terms

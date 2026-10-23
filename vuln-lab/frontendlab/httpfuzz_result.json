@@ -1,0 +1,64 @@
+{
+  "target": "http://127.0.0.1:8925/xml",
+  "mode": "methods",
+  "summary": {
+    "methods": {
+      "GET": {
+        "status": 404,
+        "length": 2229,
+        "hash": "b5346688c64a6ffb",
+        "has_flag": false,
+        "looks_error": false
+      },
+      "POST": {
+        "status": 400,
+        "length": 118,
+        "hash": "aa2bf698d9fcb419",
+        "has_flag": false,
+        "looks_error": true
+      },
+      "PUT": {
+        "status": 501,
+        "length": 356,
+        "hash": "cc3a398cfc3cbe43",
+        "has_flag": false,
+        "looks_error": true
+      },
+      "DELETE": {
+        "status": 501,
+        "length": 359,
+        "hash": "316a22849498d341",
+        "has_flag": false,
+        "looks_error": true
+      },
+      "PATCH": {
+        "status": 501,
+        "length": 358,
+        "hash": "7dc2f4073f68b864",
+        "has_flag": false,
+        "looks_error": true
+      },
+      "OPTIONS": {
+        "status": 501,
+        "length": 360,
+        "hash": "60b47d1a2845ef9d",
+        "has_flag": false,
+        "looks_error": true
+      },
+      "HEAD": {
+        "status": 501,
+        "length": 0,
+        "hash": "e3b0c44298fc1c14",
+        "has_flag": false,
+        "looks_error": false
+      },
+      "TRACE": {
+        "status": 501,
+        "length": 358,
+        "hash": "fe561ed4b903a5b9",
+        "has_flag": false,
+        "looks_error": true
+      }
+    }
+  }
+}

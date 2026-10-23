@@ -1,0 +1,10 @@
+# 私鑰與密鑰 — 絕對不可提交
+keys/
+*.private.json
+.sbom_key
+
+# 產物
+__pycache__/
+*.pyc
+*.db
+*.jsonl

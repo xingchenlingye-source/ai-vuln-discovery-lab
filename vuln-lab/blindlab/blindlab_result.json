@@ -1,0 +1,22 @@
+[
+  {
+    "name": "B1 SQL 布林盲注（唯一訊號是是非題）",
+    "cwe": "CWE-89",
+    "present": true
+  },
+  {
+    "name": "B2 time-based 盲注（完全沒有文字差異）",
+    "cwe": "CWE-89",
+    "present": true
+  },
+  {
+    "name": "B3 錯誤訊息洩漏資料庫結構",
+    "cwe": "CWE-209",
+    "present": true
+  },
+  {
+    "name": "B4 安全對照：參數化查詢完全阻擋",
+    "cwe": "防護驗證",
+    "present": true
+  }
+]

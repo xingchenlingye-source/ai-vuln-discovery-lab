@@ -1,0 +1,31 @@
+{
+  "generated": "2026-10-15T07:46:38.378483+00:00",
+  "count": 5,
+  "files": [
+    {
+      "path": "requirements-vulnerable.txt",
+      "sha256": "ddca397cc07404ad09ef32287516badd40a4ec8b2d6b45e76091909f27dfd8d2",
+      "size": 1526
+    },
+    {
+      "path": "sbom.json",
+      "sha256": "ec2663a32ffc1df465785228b14ff10417701d368171f79d305eb3e085e4f818",
+      "size": 1553
+    },
+    {
+      "path": "sbom.py",
+      "sha256": "8b1202ceb44861d8c6ba45e7281a6a10c6f908a91165486f1f830ec9dd2b1198",
+      "size": 9375
+    },
+    {
+      "path": "scan_deps.py",
+      "sha256": "b69fa1eee5bb42079ff66fc81e8e0a8fa84cdd01bac30da34ee4b2cc496e5c15",
+      "size": 7245
+    },
+    {
+      "path": "scan_result.json",
+      "sha256": "9e75280b72977b409a2faa12ede2b263638f35505d79872ae1b5b4ec87ee241c",
+      "size": 5636
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "name": "P29 Perl open() 命令注入",
+    "cwe": "CWE-78",
+    "present": true
+  },
+  {
+    "name": "P30 DBI quote() 型別混淆",
+    "cwe": "CWE-89 / CWE-843",
+    "present": true
+  },
+  {
+    "name": "P31 CGI param() + ARGV",
+    "cwe": "CWE-73",
+    "present": true
+  }
+]

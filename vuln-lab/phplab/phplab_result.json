@@ -1,0 +1,32 @@
+[
+  {
+    "name": "P1 弱比較（strstr + 數字比較）",
+    "cwe": "CWE-843",
+    "present": true
+  },
+  {
+    "name": "P2 strcmp 陣列繞過（PHP 7 行為）",
+    "cwe": "CWE-843",
+    "present": true
+  },
+  {
+    "name": "P3 in_array 型別混淆（版本差異）",
+    "cwe": "CWE-843",
+    "present": true
+  },
+  {
+    "name": "P4 PHP 反序列化（__destruct 寫檔）",
+    "cwe": "CWE-502",
+    "present": true
+  },
+  {
+    "name": "P5 Log Poisoning + LFI",
+    "cwe": "CWE-98",
+    "present": true
+  },
+  {
+    "name": "P6 SQL 截斷 + 正規化不一致",
+    "cwe": "CWE-20",
+    "present": true
+  }
+]

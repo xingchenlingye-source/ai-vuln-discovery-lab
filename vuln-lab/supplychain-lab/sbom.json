@@ -1,0 +1,71 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:cdb92136-edd1-4819-8a57-469828bfccf9",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-10-15T07:46:38.297084+00:00",
+    "tools": [
+      {
+        "vendor": "vuln-lab",
+        "name": "sbom.py",
+        "version": "1.0"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "name": "supplychain-lab",
+      "version": "1.0.0"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "Jinja2",
+      "version": "2.10.1",
+      "purl": "pkg:pypi/jinja2@2.10.1"
+    },
+    {
+      "type": "library",
+      "name": "PyYAML",
+      "version": "5.1",
+      "purl": "pkg:pypi/pyyaml@5.1"
+    },
+    {
+      "type": "library",
+      "name": "requests",
+      "version": "2.19.0",
+      "purl": "pkg:pypi/requests@2.19.0"
+    },
+    {
+      "type": "library",
+      "name": "urllib3",
+      "version": "1.24.1",
+      "purl": "pkg:pypi/urllib3@1.24.1"
+    },
+    {
+      "type": "library",
+      "name": "Django",
+      "version": "2.2.0",
+      "purl": "pkg:pypi/django@2.2.0"
+    },
+    {
+      "type": "library",
+      "name": "cryptography",
+      "version": "2.6.1",
+      "purl": "pkg:pypi/cryptography@2.6.1"
+    },
+    {
+      "type": "library",
+      "name": "lxml",
+      "version": "4.3.0",
+      "purl": "pkg:pypi/lxml@4.3.0"
+    },
+    {
+      "type": "library",
+      "name": "Flask",
+      "version": "1.0",
+      "purl": "pkg:pypi/flask@1.0"
+    }
+  ]
+}

@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 輔助漏洞挖掘（AI for Vulnerability Discovery）研究報告與學習筆記</title>
+<style>
+  :root{
+    --bg:#f5f7fa;
+    --paper:#ffffff;
+    --ink:#1b2430;
+    --ink-soft:#4a5768;
+    --line:#e2e8f0;
+    --brand:#1f4e79;
+    --brand-2:#2f7ab5;
+    --accent:#c0392b;
+    --accent-soft:#fdecea;
+    --note:#eef5fb;
+    --note-line:#2f7ab5;
+    --warn:#fff8e6;
+    --warn-line:#d99a00;
+    --ok:#eefaf1;
+    --ok-line:#2e9e5b;
+    --code-bg:#1e2733;
+    --code-ink:#e6edf3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC","Hiragino Sans TC","Segoe UI",system-ui,sans-serif;
+    line-height:1.85;
+    font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:0 22px 80px;}
+
+  /* ---------- Hero ---------- */
+  header.hero{
+    background:linear-gradient(135deg,#12304d 0%,#1f4e79 45%,#2f7ab5 100%);
+    color:#fff;
+    padding:56px 22px 48px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.hero::after{
+    content:"";
+    position:absolute;inset:0;
+    background-image:radial-gradient(rgba(255,255,255,.16) 1px, transparent 1px);
+    background-size:22px 22px;
+    opacity:.5;
+    pointer-events:none;
+  }
+  .hero-inner{max-width:1000px;margin:0 auto;position:relative;z-index:1;}
+  .kicker{
+    display:inline-block;font-size:13px;letter-spacing:.18em;
+    text-transform:uppercase;background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.3);
+    padding:5px 13px;border-radius:999px;margin-bottom:18px;
+  }
+  header.hero h1{
+    font-size:38px;line-height:1.3;margin:0 0 10px;font-weight:800;letter-spacing:.5px;
+  }
+  header.hero h1 small{display:block;font-size:17px;font-weight:400;opacity:.85;letter-spacing:1px;margin-top:8px;}
+  .hero-meta{
+    margin-top:22px;font-size:14.5px;opacity:.92;
+    display:flex;flex-wrap:wrap;gap:10px 26px;
+  }
+  .hero-meta span{display:inline-flex;align-items:center;gap:7px;}
+  .hero-meta b{font-weight:600;}
+
+  /* ---------- TOC ---------- */
+  nav.toc{
+    background:var(--paper);border:1px solid var(--line);border-radius:14px;
+    padding:26px 28px;margin:-32px auto 40px;position:relative;z-index:2;
+    box-shadow:0 10px 30px rgba(20,40,70,.08);
+  }
+  nav.toc h2{
+    margin:0 0 16px;font-size:19px;color:var(--brand);
+    border-bottom:2px solid var(--line);padding-bottom:10px;
+  }
+  nav.toc ol{
+    list-style:none;counter-reset:toc;margin:0;padding:0;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px 26px;
+  }
+  nav.toc ol li{counter-increment:toc;}
+  nav.toc ol li a{
+    display:block;text-decoration:none;color:var(--ink-soft);
+    padding:6px 8px;border-radius:8px;font-size:15.2px;transition:all .15s;
+    border-left:3px solid transparent;
+  }
+  nav.toc ol li a::before{
+    content:counter(toc,decimal-leading-zero) "  ";color:var(--brand-2);font-weight:700;font-size:13px;
+  }
+  nav.toc ol li a:hover{background:var(--note);color:var(--brand);border-left-color:var(--brand-2);}
+
+  /* ---------- Sections ---------- */
+  section{
+    background:var(--paper);border:1px solid var(--line);border-radius:14px;
+    padding:34px 36px 38px;margin-bottom:26px;
+    box-shadow:0 2px 10px rgba(20,40,70,.04);
+    scroll-margin-top:20px;
+  }
+  h2.ch{
+    font-size:25px;color:var(--brand);margin:0 0 8px;font-weight:800;
+    padding-bottom:14px;border-bottom:3px solid var(--brand);
+    display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  }
+  h2.ch .num{
+    font-size:14px;font-weight:700;color:#fff;background:var(--brand);
+    border-radius:7px;padding:3px 10px;letter-spacing:1px;flex:none;
+  }
+  h2.ch .en{font-size:14px;font-weight:400;color:var(--ink-soft);letter-spacing:.4px;}
+  h3{
+    font-size:19.5px;margin:32px 0 10px;color:#14395c;font-weight:700;
+    padding-left:13px;border-left:5px solid var(--brand-2);
+  }
+  h4{font-size:16.5px;margin:22px 0 8px;color:#1f4e79;font-weight:700;}
+  p{margin:11px 0;}
+  ul,ol{margin:10px 0 14px;padding-left:26px;}
+  li{margin:6px 0;}
+  li > ul, li > ol{margin:6px 0;}
+  strong{color:#10243a;}
+  a{color:var(--brand-2);text-decoration:none;border-bottom:1px dotted #9dc3e0;}
+  a:hover{color:var(--accent);border-bottom-color:var(--accent);}
+  code{
+    font-family:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New",monospace;
+    background:#eef2f7;color:#b03060;padding:2px 6px;border-radius:5px;font-size:14px;
+  }
+  pre{
+    background:var(--code-bg);color:var(--code-ink);border-radius:11px;
+    padding:18px 20px;overflow-x:auto;font-size:14px;line-height:1.7;
+    border-left:5px solid var(--brand-2);margin:14px 0;
+  }
+  pre code{background:none;color:inherit;padding:0;font-size:13.6px;}
+  pre .c{color:#8fa6bd;}
+
+  /* ---------- Callouts ---------- */
+  .box{border-radius:11px;padding:16px 20px;margin:18px 0;border-left:5px solid;font-size:15.4px;}
+  .box .t{font-weight:800;display:block;margin-bottom:6px;letter-spacing:.4px;}
+  .box.note{background:var(--note);border-color:var(--note-line);}
+  .box.note .t{color:#1a5a91;}
+  .box.warn{background:var(--warn);border-color:var(--warn-line);}
+  .box.warn .t{color:#8a6100;}
+  .box.ok{background:var(--ok);border-color:var(--ok-line);}
+  .box.ok .t{color:#1d6b3d;}
+  .box.danger{background:var(--accent-soft);border-color:var(--accent);}
+  .box.danger .t{color:var(--accent);}
+
+  /* ---------- Table ---------- */
+  .tw{overflow-x:auto;margin:18px 0;}
+  table{border-collapse:collapse;width:100%;font-size:14.7px;background:#fff;}
+  thead th{
+    background:var(--brand);color:#fff;text-align:left;padding:11px 13px;
+    font-weight:600;font-size:14.3px;white-space:nowrap;
+  }
+  tbody td{padding:10px 13px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:#fafcff;}
+  tbody tr:hover{background:#eef5fb;}
+  td.mono,th.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:13.4px;}
+
+  /* ---------- Stage cards ---------- */
+  .stage{
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:22px 0;
+    background:#fff;
+  }
+  .stage > .sh{
+    padding:15px 20px;color:#fff;
+    background:linear-gradient(120deg,#1f4e79,#2f7ab5);
+    display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .stage > .sh .st{font-size:18px;font-weight:800;}
+  .stage > .sh .sd{font-size:13.5px;opacity:.9;}
+  .stage.s1 > .sh{background:linear-gradient(120deg,#2d6a4f,#40916c);}
+  .stage.s2 > .sh{background:linear-gradient(120deg,#1f4e79,#2f7ab5);}
+  .stage.s3 > .sh{background:linear-gradient(120deg,#5a3fa0,#7b5cc4);}
+  .stage.s4 > .sh{background:linear-gradient(120deg,#a03f2f,#c96b52);}
+  .stage .sb{padding:18px 22px 22px;}
+
+  .checklist{list-style:none;padding-left:0;}
+  .checklist li{padding-left:28px;position:relative;}
+  .checklist li::before{
+    content:"\25B8";position:absolute;left:8px;top:0;color:var(--brand-2);font-weight:700;
+  }
+
+  /* ---------- Timeline ---------- */
+  .tl{position:relative;margin:22px 0 10px;padding-left:28px;border-left:3px solid var(--line);}
+  .tl .ev{position:relative;margin-bottom:22px;}
+  .tl .ev::before{
+    content:"";position:absolute;left:-37px;top:9px;width:13px;height:13px;
+    border-radius:50%;background:var(--brand-2);border:3px solid #fff;
+    box-shadow:0 0 0 2px var(--brand-2);
+  }
+  .tl .dt{
+    display:inline-block;font-size:12.6px;font-weight:700;letter-spacing:.6px;
+    color:#fff;background:var(--brand-2);border-radius:6px;padding:2px 9px;margin-bottom:5px;
+  }
+  .tl .tt{font-weight:800;font-size:16.3px;color:#14395c;margin:2px 0 4px;}
+  .tl .td{font-size:15.2px;color:var(--ink-soft);margin:0;}
+
+  .tag{
+    display:inline-block;font-size:12.4px;background:#eef2f7;color:#3b5b7d;
+    border:1px solid #d7e2ee;border-radius:999px;padding:2px 10px;margin:0 5px 5px 0;
+    font-family:"JetBrains Mono",Consolas,monospace;
+  }
+
+  footer{
+    text-align:center;color:#7b8798;font-size:14px;padding:34px 10px 0;
+    border-top:1px solid var(--line);margin-top:14px;
+  }
+  .refs ol{padding-left:24px;}
+  .refs li{margin:9px 0;font-size:14.6px;word-break:break-all;}
+  .toplink{
+    display:inline-block;font-size:13px;color:#7b8798;margin-top:8px;
+    border-bottom:none;
+  }
+  @media (max-width:640px){
+    header.hero h1{font-size:27px;}
+    section{padding:24px 20px 28px;}
+    h2.ch{font-size:21px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="kicker">Research Report &amp; Learning Notes</span>
+    <h1>AI 輔助漏洞挖掘
+      <small>AI for Vulnerability Discovery — 技術路線、代表案例、能力邊界與四階段學習路徑</small>
+    </h1>
+    <div class="hero-meta">
+      <span><b>主題：</b>LLM × 軟體安全 / 自動化漏洞研究</span>
+      <span><b>視角：</b>教育與防禦研究</span>
+      <span><b>資料截止：</b>2026-10（以公開來源為準）</span>
+      <span><b>語言：</b>繁體中文（術語保留英文）</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc" id="toc">
+  <h2>目錄</h2>
+  <ol>
+    <li><a href="#ch1">領域概述：瓶頸與典範轉移</a></li>
+    <li><a href="#ch2">主要技術路線（四大類）</a></li>
+    <li><a href="#ch3">代表工作與里程碑</a></li>
+    <li><a href="#ch4">工具與生態系</a></li>
+    <li><a href="#ch5">能力邊界與已知局限</a></li>
+    <li><a href="#ch6">學習路徑（四階段）</a></li>
+    <li><a href="#ch7">基準與資料集</a></li>
+    <li><a href="#ch8">合法與倫理邊界</a></li>
+    <li><a href="#ch9">延伸資源清單</a></li>
+    <li><a href="#refs">參考連結（完整 URL）</a></li>
+  </ol>
+</nav>
+
+<!-- ===================== 1 ===================== -->
+<section id="ch1">
+  <h2 class="ch"><span class="num">CH 01</span>領域概述：瓶頸與典範轉移 <span class="en">Overview</span></h2>
+
+  <h3>1.1 傳統漏洞挖掘的三個結構性瓶頸</h3>
+
+  <p>在 LLM 大規模進入資安工作流之前，漏洞挖掘主要依靠三條路徑：<strong>人工原始碼審計</strong>、<strong>fuzzing（模糊測試）</strong>、以及<strong>靜態分析工具</strong>。三者各自撞到了不同的天花板。</p>
+
+  <h4>（1）人工審計：線性成本，無法規模化</h4>
+  <p>人工審計的產出與投入的資深人力小時幾乎成正比，而現代專案的程式碼規模卻呈指數成長。一位熟練研究員要理解一個大型 C/C++ 專案的資料流與生命週期規則，往往需要數週；能審計的範圍永遠是整個 codebase 的一小塊。更關鍵的是，<strong>審計者的注意力是稀缺資源</strong>——真實世界的漏洞大部分落在「不尋常的邊界條件」上（sentinel 值、off-by-one、型別混用），而人類在閱讀數萬行樣板化的程式碼後，很容易對這類細節產生注意力疲乏。</p>
+
+  <h4>（2）Fuzzing：覆蓋率不等於語意正確性</h4>
+  <p>Fuzzing 是過去二十年最成功的漏洞發現技術：AFL / libFuzzer / Honggfuzz 等工具在 OSS-Fuzz 上累積發現了數以萬計的漏洞。但它有明確的結構限制：</p>
+  <ul>
+    <li><strong>入口條件難滿足</strong>：需要特定格式、特定 magic bytes、特定狀態機順序才能進入的程式路徑，隨機變異幾乎碰不到。</li>
+    <li><strong>覆蓋率引導的迷思</strong>：覆蓋率只能告訴 fuzzer「走到了哪些程式碼」，無法告訴它「這裡的語意不變量是什麼」。一個已達 100% line coverage 的函式，仍可能因為缺少極端值組合而藏有漏洞。</li>
+    <li><strong>飽和效應（saturation）</strong>：對於已被長期 fuzzing 的成熟專案，新發現漏洞的邊際報酬快速衰減。</li>
+  </ul>
+
+  <div class="box note">
+    <span class="t">實證案例：SQLite 的 150 CPU-hour 對照實驗</span>
+    Google Project Zero 與 DeepMind 的 Big Sleep 團隊在 2024 年報告其 agent 於 SQLite 中發現一個可觸發的 stack buffer underflow 後，特地回頭做了對照實驗：依照 SQLite 官方 AFL 說明設定、並確認 fuzzing corpus 中已包含觸發所需的 <code>generate_series</code> 與 <code>rowid</code> 關鍵字後，執行 AFL 達 <strong>150 CPU-hours 仍未發現</strong>該問題；即使把必要關鍵字加入 AFL 的 SQL dictionary，該 bug 也只在 corpus 已包含「非常接近崩潰輸入」的範例時才會被快速找到。團隊結論是：對這個問題而言，<strong>程式碼覆蓋率不是可靠的引導訊號</strong>。這正是「覆蓋率與語意盲區」的具體樣貌。
+  </div>
+
+  <h4>（3）靜態分析：規則可解釋，但誤報與語意不足</h4>
+  <p>CodeQL、Semgrep 這類工具以資料流／污點分析為核心，優點是可解釋、可重複、可進 CI，缺點是：</p>
+  <ul>
+    <li><strong>規則即上限</strong>：沒被寫成規則的漏洞模式就不會被找到；規則越寬則誤報暴增。</li>
+    <li><strong>缺乏跨函式／跨檔案的語意推理</strong>：對「這個欄位的值域不變量是否被破壞」這類問題，純資料流分析往往力不從心。</li>
+    <li><strong>告警疲乏</strong>：一個中大型專案跑完一次查詢可能產生數千條結果，人工排序與驗證成為新的瓶頸。</li>
+  </ul>
+
+  <h3>1.2 LLM 進入後改變了什麼</h3>
+
+  <p>LLM 的能力邊界「剛好」落在傳統方法的失敗面上。以下四項是這個領域真正的典範轉移點：</p>
+
+  <div class="tw">
+    <table>
+      <thead>
+        <tr><th>維度</th><th>傳統方法</th><th>LLM / Agentic 方法</th><th>為什麼關鍵</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>理解方式</b></td>
+          <td>規則比對、資料流圖</td>
+          <td>自然語言層級的語意推理</td>
+          <td>能處理「這個 sentinel 值是否被所有使用者正確處理」這類非模板化問題</td>
+        </tr>
+        <tr>
+          <td><b>知識來源</b></td>
+          <td>分析師寫死的規則</td>
+          <td>預訓練中吸收的 CWE 模式、歷史 CVE、專案慣例</td>
+          <td>遷移能力強：看過一類 bug 後能找到其變體（variant analysis）</td>
+        </tr>
+        <tr>
+          <td><b>工作模式</b></td>
+          <td>單次掃描</td>
+          <td>多輪 agentic 迴圈：假設 → 工具查證 → 修改測試 → 觀察崩潰 → 修正假設</td>
+          <td>允許「失敗後轉向」，這是人類研究員的實際工作方式</td>
+        </tr>
+        <tr>
+          <td><b>產出物</b></td>
+          <td>告警列表</td>
+          <td>可重現的 testcase + root-cause analysis + 可能的 patch</td>
+          <td>直接接上「驗證」與「修補」環節，縮短從發現到修復的鏈路</td>
+        </tr>
+        <tr>
+          <td><b>成本結構</b></td>
+          <td>資深人力工時</td>
+          <td>GPU / API 費用 + 推理時間</td>
+          <td>可水平擴展、可大量重複嘗試（test-time scaling）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>值得注意的是，目前領先的公開成果幾乎都不是「把程式碼丟給 LLM 問有沒有 bug」這種單輪用法，而是<strong>把 LLM 當成一個需要工具（debugger、code browser、fuzzer、executor）才能工作的推理核心</strong>。Big Sleep 的 trajectory 就是典型：agent 先用 <code>code_browser_source</code> 找範例、嘗試修改 patch 附帶的 testcase、因缺少 TCL module 而失敗、改用 <code>generate_series</code>、設中斷點、最後產出 <code>SELECT * FROM generate_series(1,10,1) WHERE ROWID = 1;</code> 這個觸發輸入。整個過程「讀起來很像人類研究員，一開始有個想法，過程中想到別的點子，最後復現的其實是個稍微不同的 bug」。</p>
+
+  <div class="box warn">
+    <span class="t">重要前提：不要誇大定位</span>
+    Big Sleep 團隊在其官方部落格明確表示，這些屬於<strong>高度實驗性的結果</strong>，並且該團隊當時的立場是：<em>就現況而言，針對特定目標打造的 fuzzer「至少與之同等有效」</em>。一個誠實的報告必須把這句話和成果一起寫進去。
+  </div>
+
+  <a class="toplink" href="#toc">↑ 回目錄</a>
+</section>
+
+<!-- ===================== 2 ===================== -->
+<section id="ch2">
+  <h2 class="ch"><span class="num">CH 02</span>主要技術路線 <span class="en">Four Technical Routes</span></h2>
+
+  <p>目前的公開研究與產品，大致可歸納為四條路線。實務上它們很少單獨出現，而是互相焊接（例如：靜態分析縮小範圍 → LLM 排序 → fuzzer 驗證 → LLM 生成 patch）。</p>
+
+  <h3>2.1 路線 A：LLM 直接做原始碼審計與漏洞定位</h3>
+
+  <h4>核心機制</h4>
+  <ul>
+    <li><strong>Repository-level 上下文建構</strong>：不是把整個 repo 塞進 context（不可能），而是先建立結構化索引（函式呼叫圖、符號表、diff 範圍），再依問題動態檢索相關檔案片段。</li>
+    <li><strong>Agentic 多輪推理</strong>：agent 具備「假設 → 查證 → 修正」迴圈，並可呼叫工具（grep、symbol lookup、git log、執行測試）。</li>
+    <li><strong>Variant analysis（變體分析）</strong>：以「已修補的漏洞」為起點，要求模型在當前 HEAD 找出同類但未修的問題。這是目前<strong>訊號雜訊比最高</strong>的設定，因為它把開放式問題轉成了有明確先驗的問題。</li>
+    <li><strong>Crash 驅動的閉環</strong>：agent 能自己寫 test harness、編譯、跑、看輸出，並根據 sanitizer/assertion 訊息回頭修正假設。</li>
+  </ul>
+
+  <h4>優勢與弱點</h4>
+  <div class="tw">
+    <table>
+      <thead><tr><th>優勢</th><th>弱點</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>能覆蓋 fuzzing 難以觸及的路徑（需要語意組合的邏輯漏洞）</td>
+          <td>誤報率高；「看起來像漏洞」與「可觸發」之間有巨大落差</td>
+        </tr>
+        <tr>
+          <td>可產出人類可讀的 root cause 說明，降低 triage 成本</td>
+          <td>對 context 敏感；關鍵程式碼未被檢索到就會漏報</td>
+        </tr>
+        <tr>
+          <td>variant analysis 的 recall 明顯優於人力抽查</td>
+          <td>沒有可執行驗證時，輸出應視為<strong>假設</strong>而非 finding</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ok">
+    <span class="t">實務心法</span>
+    「發現」與「驗證」必須由不同機制負責。XBOW 的公開說明即採此架構：由創意導向的 AI agent 負責<strong>發現</strong>，再由確定性邏輯（deterministic logic / controlled testing）決定什麼是真的，並主張「plausibility is not proof, and confidence is not evidence」。
+  </div>
+
+  <h3>2.2 路線 B：AI 引導 Fuzzing</h3>
+
+  <p>這條路線把 LLM 插進 fuzzing 的瓶頸位置，而不是取代 fuzzer。Google 的 <code>oss-fuzz-gen</code> 專案即明確定位為「LLM powered fuzzing via OSS-Fuzz」——用 LLM 為既有 OSS-Fuzz 專案生成與改進 fuzz target。</p>
+
+  <h4>四個可插入的環節</h4>
+  <ol>
+    <li><strong>Fuzz target / harness 生成</strong>：LLM 讀取專案的公開 API 與既有測試，產出能編譯、能被 OSS-Fuzz 執行的 harness。這是目前最有價值也最可驗證的應用——因為成敗可由「是否成功 build、是否提升覆蓋率、是否找到 crash」客觀判定。</li>
+    <li><strong>Seed 生成與 corpus 精煉</strong>：針對格式敏感的目標（SQL、圖片格式、設定檔），由 LLM 產生結構合法且語意多樣的 seed，繞過 parser 的第一道牆。</li>
+    <li><strong>Mutator 學習 / 語意變異</strong>：以 LLM 產生「保持語法合法但改變語意」的變異，補足 byte-level mutation 的不足。相關學術方向包含 learning-based mutation 與 LLM-guided mutation 的比較研究。</li>
+    <li><strong>Crash triage 與去重（dedup）</strong>：用 LLM 判斷兩個 crash 是否同源、估算可利用性、產生最小化說明，降低人工 triage 負擔。這是「低風險高報酬」的應用，因為 triage 的錯誤代價遠低於漏報。</li>
+  </ol>
+
+  <div class="box note">
+    <span class="t">為什麼這條路線最務實</span>
+    Fuzzing 提供了<strong>客觀的成功判準</strong>：crashes、coverage、build 成功率都是可自動量測的數字。這使得 LLM 的產出可以被自動過濾，避免落入「LLM 說有 bug 但無法驗證」的困境。OSS-Fuzz 的大規模基礎設施（數千個專案、持續建置與 crash 去重）正好提供了現成的評測場。
+  </div>
+
+  <h3>2.3 路線 C：程式分析 + LLM 的混合路線</h3>
+
+  <p>純 LLM 的問題是「沒有不變量」，純靜態分析的問題是「沒有語意」。混合路線的典型設計是讓兩者互補：</p>
+
+  <pre><code><span class="c">// 混合管線的常見組態（概念示意）</span>
+[CodeQL / Semgrep]          產生候選資料流路徑（高 recall、高誤報）
+        │
+        ▼
+[LLM 排序 / 過濾]          依 sink 危險性、可達性、輸入可控性排序
+        │
+        ▼
+[LLM 產生 PoC 假設]        依告警上下文寫出最小觸發輸入
+        │
+        ▼
+[Sanitizer + 沙箱執行]      ASan / UBSan / MSan 驗證是否真的觸發
+        │
+        ▼
+[LLM 生成 patch] → [回歸測試 / 差異化測試驗證 patch]
+</code></pre>
+
+  <p>這條路線的三個關鍵設計決策：</p>
+  <ul>
+    <li><strong>用分析工具當「檢索器」而非「裁判」</strong>：把 CodeQL 當成 recall 引擎，把 LLM 當成 precision 引擎。</li>
+    <li><strong>以 sanitizer 為唯一真相來源</strong>：ASan/UBSan 說崩了就是崩了；LLM 說有漏洞但 sanitizer 不響，就只是假設。</li>
+    <li><strong>規則以自然語言輔助生成</strong>：由 LLM 協助撰寫 CodeQL/Semgrep 規則，再由人工審查規則本身的正確性（避免「用 LLM 驗證 LLM」的循環）。</li>
+  </ul>
+
+  <h3>2.4 路線 D：自動化 Exploit 生成與可達性驗證</h3>
+
+  <p>此路線的核心問題不是「有沒有 bug」，而是「這個 bug 是否真的可達、可利用、可修補」。技術要點：</p>
+  <ul>
+    <li><strong>可達性驗證（reachability validation）</strong>：確認攻擊者可控輸入能到達危險 sink，且中途的安全檢查（長度檢查、型別檢查、白名單）無法繞過。</li>
+    <li><strong>沙箱化執行環境</strong>：容器化的 build + run 環境，掛載 sanitizer，限制網路與資源，確保自動生成的 PoC 不會外溢。OSS-Fuzz 與 CyberGym 都以容器化重現環境為基礎。</li>
+    <li><strong>Patch 驗證</strong>：AI 生成的修補必須通過「原 PoC 不再崩潰」+「既有測試套件未回歸」雙重檢查。Anthropic 的公開研究即指出 patch 的困難在於必須做<strong>外科手術式的修改</strong>：移除漏洞但不改變原功能，且模型必須自行推斷程式碼的意圖。</li>
+    <li><strong>差異化測試（differential testing）</strong>：對照修補前後行為，抓出「補了一個洞但引入另一個」的情況。CyberGym 的評測過程中就發現了<strong>不完整修補（incomplete patches）</strong>的實際案例。</li>
+  </ul>
+
+  <h3>2.5 跨路線的共同結論：架構（harness）可能比模型本身更關鍵</h3>
+
+  <p>四條路線各自獨立發展，卻收斂到同一個結論。這一段是整份報告最值得記住的判斷之一。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>來源</th><th>支持「架構／工程 &gt; 模型」的具體證據</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>XBOW</b>（2026）</td>
+          <td>主張其能力來自「<b>數千個短生命週期 agent + coordinator + 確定性驗證</b>」的架構，而非單一模型的進步；並強調架構與模型同等重要。</td>
+        </tr>
+        <tr>
+          <td><b>CyberGym</b>（2025）</td>
+          <td>四個不同 agent 在相同 backbone（GPT-4.1）下成功率相近，但<b>取結果聯集後達 18.4%、接近最佳單一 agent 的兩倍</b>——證明架構差異帶來互補性。</td>
+        </tr>
+        <tr>
+          <td><b>HarnessAgent 研究</b>（2025-12）</td>
+          <td>在相同任務下，<b>預先結構化的 pipeline 明顯優於由 LLM 自行規劃的 agent 式流程</b>（Sherpa 僅 9 個成功 harness，遠低於 OSS-Fuzz-Gen 與 LLM4FDG）。工程化的工作流本身就能決定成敗。</td>
+        </tr>
+        <tr>
+          <td><b>OSS-CRS</b>（2026-03）</td>
+          <td>七支 AIxCC 隊伍的技術各有特色，但<b>真正的瓶頸不是技術能力，而是能否穩健地整合進自主系統</b>。</td>
+        </tr>
+        <tr>
+          <td><b>IronCurtain</b>（2026-08）</td>
+          <td>最直接的實證：作者以<b>開源 orchestration 框架搭配商用模型與開源權重模型（GLM 5.1）</b>，複現了前沿模型報告的旗艦發現，並自主找到新的 zero-day。結論是能力「存在於管理模型的 harness 之中，而不只存在於專有前沿模型裡」。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ok">
+    <span class="t">對學習者的意義</span>
+    如果架構的貢獻與模型相當甚至更大，那麼<strong>「學會設計 agent 工作流、context 管理與驗證迴圈」的投資報酬率，可能高於「等待更強的下一個模型」</strong>。這也解釋了為什麼本報告的學習路徑 CH06 把「工具鏈」（S2）放在「AI 方法」（S3）之前——沒有可驗證的執行環境與工具，再強的模型也只能產出無法證實的假設。
+  </div>
+
+  <p>實作上，這些系統收斂出四項共同的架構設計：</p>
+  <ol>
+    <li><strong>發現與驗證分離</strong>：由創意導向的 agent 負責提出假設，由確定性邏輯（sanitizer、回歸測試、PoV 重跑）判定真偽。</li>
+    <li><strong>狀態外置（journal / artifact）</strong>：把進度寫到磁碟而非 context，讓新 agent 能以乾淨的 context window 接手（IronCurtain 的 append-only journal、OSS-CRS 的 artifact exchange 皆為此設計）。</li>
+    <li><strong>預算是一級資源</strong>：LLM 花費需像 CPU／記憶體一樣被配額與強制（OSS-CRS 的 per-CRS LLM budget）。</li>
+    <li><strong>分層 harness</strong>：從單函式隔離 harness、多元件 harness，到完整 VM 端到端驗證，依所需證據強度逐級升級（IronCurtain 明確採用此三層策略）。</li>
+  </ol>
+
+  <div class="box danger">
+    <span class="t">本報告的界線宣告</span>
+    本節描述的是<strong>研究與防禦用途的方法論與評測設計</strong>。基於教育與防禦研究視角，本文不會提供任何針對特定真實目標的攻擊步驟、武器化 exploit 程式碼或繞過流程。自動化 exploit 生成能力的討論，目的是讓防禦方理解評測標準與修補驗證的重要性。
+  </div>
+
+  <a class="toplink" href="#toc">↑ 回目錄</a>
+</section>
+
+<!-- ===================== 3 ===================== -->
+<section id="ch3">
+  <h2 class="ch"><span class="num">CH 03</span>代表工作與里程碑 <span class="en">Milestones</span></h2>
+
+  <p>以下每一項均已核實主體、時間與公開成果，並附來源。無法確認的細節以「待核實」標示。</p>
+
+  <div class="tl">
+
+    <div class="ev">
+      <span class="dt">2023-08 起，2024-11-20 總結成果（時間軸最早事件）</span>
+      <div class="tt">Google Online Security Blog — 以 AI 強化 OSS-Fuzz：26 個新漏洞、272 個專案與 37 萬行覆蓋成長</div>
+      <p class="td"><strong>作者：</strong>Oliver Chang、Dongge Liu、Jonathan Metzman（Google Open Source Security Team），發文於 <strong>2024-11-20</strong>。Google 於 2023 年 8 月首度宣布將 LLM 引入 OSS-Fuzz（<em>AI-powered fuzzing: breaking the bug hunting barrier</em>），初期聚焦於用 LLM 產生 fuzz target——這是 fuzzing 流程中最耗人力的步驟之一。</p>
+      <p class="td"><strong>可核實的具體數字（皆為原文逐字）：</strong></p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li>OSS-Fuzz 向開源專案維護者通報了 <strong>26 個新漏洞</strong>。</li>
+        <li>覆蓋率改善涵蓋 <strong>272 個 C/C++ 專案</strong>（原文特別註明「up from 160」——自 160 個專案增加至 272 個）。</li>
+        <li>新增 <strong>370k+ 行</strong>程式碼覆蓋（原文 "adding 370k+ lines of new code coverage"）。</li>
+        <li>單一專案的最高覆蓋成長為<strong>從 77 行增至 5,434 行（增幅 7,000%）</strong>。</li>
+        <li>歷史基數：OSS-Fuzz 在專案<strong>前 8 年協助修補逾 11,000 個漏洞</strong>。</li>
+        <li>代表案例 <strong>CVE-2024-9143（OpenSSL）</strong>：2024-09-16 通報、2024-10-16 發布修補。原文敘述該漏洞「很可能已存在<strong>約二十年</strong>，且不可能以人類撰寫的既有 fuzz target 發現」。</li>
+        <li>原文另舉 <strong>cJSON</strong> 為例：即使該函式已有真人撰寫的 harness，AI 產生的 target 仍在同一函式中找到新漏洞。</li>
+      </ul>
+      <p class="td"><strong>官方定位與自動化程度（原文）：</strong>Google 將此定位為「自動化漏洞發現的里程碑——每個漏洞都是用 AI 生成與增強的 fuzz target 找到的」，並說明其目標是把五步流程全面自動化：（1）撰寫 fuzz target →（2）修正編譯錯誤 →（3）試跑並修正執行期錯誤 →（4）長時間執行並分流 crash →（5）修補漏洞。原文明確表示<strong>「我們的 LLM 目前已能執行前四步（第五步即將到來）」</strong>。框架自 2024 年 1 月起開源。</p>
+      <p class="td"><strong>Google 自行揭露的限制（原文，對 CH05 極具參考價值）：</strong></p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li><strong>行覆蓋率不是無 bug 的保證</strong>：「line coverage is not a guarantee that a function is free of bugs. Code coverage as a metric isn't able to measure all possible code paths and states」——不同 flag 與配置會觸發不同行為、挖出不同 bug。</li>
+        <li><strong>實際漏洞可能多於 26 個</strong>：「There are likely more than the 26 vulnerabilities we've already reported upstream hiding in our results.」</li>
+        <li><strong>自動分流尚未達到免人工</strong>：「to get to a point where we're confident about not requiring human review」。</li>
+        <li><strong>自動產生修補尚無成果可分享</strong>：第 5 步「We don't have anything we can share here today.」</li>
+        <li><strong>幻覺風險與對策</strong>：提供更完整的專案脈絡可降低 LLM 幻覺——「The more complete and relevant information we can provide the LLM about a project, the less likely it would be to hallucinate the missing details in its response.」</li>
+      </ul>
+      <div class="box ok" style="margin:10px 0 0;">
+        <span class="t">值得記下的一課：原文沒有說的事，不要替它說</span>
+        本次特別針對該文做了「不存在數字」的檢核，結果是兩個常被誤引的數據<strong>在原文中根本不存在</strong>：<br>
+        ① <strong>「新增了多少 fuzz target」</strong>——原文只有相對描述（"greater number of correct fuzz targets"）與覆蓋率指標，<strong>未給任何 target 總數</strong>。<br>
+        ② <strong>「與純人工相比快幾倍」</strong>——原文<strong>不含</strong>任何倍數表述（無 "10x"、"times more"、"faster"、"compared to humans"）。<br>
+        這正是本報告 CH05「不要編造數字」的自我示範：<strong>能證明的只有「AI 找到 26 個漏洞」，不能推論成「比人類快 N 倍」。</strong>
+      </div>
+      <div class="box warn" style="margin:10px 0 0;">
+        <span class="t">兩個引用陷阱（務必避開）</span>
+        ① <strong>嚴重度措辭</strong>：部分二手報導把 CVE-2024-9143 稱為 "critical"，但原始部落格<strong>並未如此描述</strong>，且 NVD 記錄為 <strong>CVSS 4.3（medium）</strong>。引用時請勿沿用 "critical"。<br>
+        ② <strong>早期階段數字不可混用</strong>：Google 官方 OSS-Fuzz 文件另有 2023 年階段的實驗數據（14/31 專案成功、覆蓋率提升 0–31%、tinyxml2 由 38% 升至 69%），那是<strong>較早期的研究</strong>，與本文的 272 專案／370k 行／7,000% 屬不同時間點與不同指標。<br>
+        ③ 另註：原文稱 26 個漏洞，而 <code>google/oss-fuzz-gen</code> README 的「Bugs Discovered」表當時列出約 30 筆——兩者是否為同一集合，原文未說明。引用時宜分開呈現並註明來源。
+      </div>
+      <p class="td">來源：<a href="https://security.googleblog.com/2024/11/leveling-up-fuzzing-finding-more.html">security.googleblog.com（一手原文，本次已成功取得全文）</a>、<a href="https://security.googleblog.com/2023/08/ai-powered-fuzzing-breaking-bug-hunting.html">2023-08 宣告文</a>、<a href="https://github.com/google/oss-fuzz-gen">github.com/google/oss-fuzz-gen（框架支援模型清單與 Bugs Discovered 表）</a>、<a href="https://nvd.nist.gov/vuln/detail/CVE-2024-9143">NVD CVE-2024-9143（CVSS 4.3 medium）</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2024-06</span>
+      <div class="tt">Google Project Zero — Project Naptime</div>
+      <p class="td">Project Zero 發表 <em>Project Naptime: Evaluating Offensive Security Capabilities of Large Language Models</em>，提出 LLM 輔助漏洞研究的框架，並展示在 Meta 的 CyberSecEval2 benchmark 上改善當時的 state-of-the-art 表現。這是 Big Sleep 的前身，也是「LLM + 工具迴圈」此一架構的公開起點。</p>
+      <p class="td">來源：<a href="https://projectzero.google/2024/06/project-naptime.html">projectzero.google/2024/06/project-naptime.html</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2024-08</span>
+      <div class="tt">DARPA AIxCC — 準決賽（ASC）與 Team Atlanta 的 SQLite null-pointer dereference</div>
+      <p class="td">在 AIxCC 的相關活動中，Team Atlanta 於 SQLite 中發現一個 null-pointer dereference。此事件被 Big Sleep 團隊明確引用為啟發來源之一。Team Atlanta 並公開了其 CRS 元件（<code>aixcc-afc-atlantis</code>）。</p>
+      <p class="td">來源：<a href="https://team-atlanta.github.io/blog/post-asc-sqlite/">team-atlanta.github.io/blog/post-asc-sqlite/</a>（經 Big Sleep 文章引用）、<a href="https://github.com/Team-Atlanta/aixcc-afc-atlantis">github.com/Team-Atlanta/aixcc-afc-atlantis</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2024-11-01</span>
+      <div class="tt">Big Sleep（Google Project Zero × Google DeepMind）：SQLite 首個真實世界可觸發記憶體安全漏洞</div>
+      <p class="td">Big Sleep agent 在 SQLite 中發現一個 <strong>exploitable stack buffer underflow</strong>。位於 <code>seriesBestIndex()</code>：<code>sqlite3_index_constraint.iColumn</code> 以 −1 作為 ROWID 的 sentinel，而該函式未正確處理此邊界，導致以負索引寫入堆疊上的 <code>aIdx[7]</code>，進而破壞 <code>pConstraint</code> 指標的低 32 bits。團隊於 2024 年 10 月初通報，開發者<strong>同日修補</strong>；因在正式釋出前發現，使用者未受影響（commit <code>41d58a014ce89356</code>）。團隊稱此為「首個公開的、由 AI agent 在廣泛使用的真實世界軟體中發現未知可觸發記憶體安全問題」的案例。</p>
+      <p class="td">方法：以 Gemini 1.5 Pro 執行 variant analysis，種子 commit 為 <code>[1976c3f7]</code>（與最終發現的 bug 僅弱相關）。觸發輸入：<code>SELECT * FROM generate_series(1,10,1) WHERE ROWID = 1;</code>。使用 fuzzing 對照組 150 CPU-hours 未能發現。</p>
+      <p class="td">來源：<a href="https://projectzero.google/2024/10/from-naptime-to-big-sleep.html">projectzero.google/2024/10/from-naptime-to-big-sleep.html</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2024-11-08（ICLR 2025 論文）</span>
+      <div class="tt">Cybench：以 CTF 題目評估語言模型的資安能力</div>
+      <p class="td"><em>Cybench: A Framework for Evaluating Cybersecurity Capabilities and Risks of Language Models</em>（Andy K. Zhang 等，ICLR 2025），以 CTF 競賽題目建構評測框架。Anthropic 後續長期以 Cybench 追蹤模型進展，並在報告中指出其評估使用 40 題中的 37 題子集（3 題因實作困難排除）。</p>
+      <p class="td">來源：<a href="https://cybench.github.io/">cybench.github.io</a>、<a href="https://proceedings.iclr.cc/paper_files/paper/2025/hash/3e9412a9c1d93810ef3ef7825115016b-Abstract-Conference.html">ICLR 2025 proceedings</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2025-06（arXiv:2506.02548）</span>
+      <div class="tt">CyberGym：大規模真實世界漏洞評測基準（UC Berkeley RDI）</div>
+      <p class="td">由 Zhun Wang、Tianneng Shi、Jingxuan He、Matthew Cai、Jialin Zhang、Dawn Song 提出。<strong>1,507 個真實漏洞、188 個開源專案</strong>，涵蓋 28 種 crash 類型，規模約為先前 benchmark 的 7.5 倍。任務設計為：給 agent 修補前的 codebase + 一段漏洞描述，要求產出能觸發 bug 的 PoC，且必須在修補後的版本不再觸發，成功與否由<strong>掛載 sanitizer 的執行結果自動判定</strong>。</p>
+      <p class="td">公布之真實影響：agent 在受評測過程中<strong>自主發現 35 個 zero-day 與 17 個歷史上的不完整修補</strong>；其中經去重與分析對應到 10 個獨特、先前未知的 zero-day，平均潛伏 <strong>969 天</strong>。以 OpenHands + GPT-4.1 / GPT-5 在 Level-0（僅給 codebase）設定下對 431 個 OSS-Fuzz 專案、1,748 個執行檔進行開放式挖掘：GPT-4.1 觸發 16 次 crash → 7 個確認 zero-day；GPT-5 觸發 56 次 crash → 22 個確認 zero-day。所有發現皆已負責任揭露，當時已產生 3 個 CVE 指派與 6 個修補。</p>
+      <p class="td">來源：<a href="https://rdi.berkeley.edu/blog/cybergym/">rdi.berkeley.edu/blog/cybergym/</a>、<a href="https://arxiv.org/abs/2506.02548">arxiv.org/abs/2506.02548</a>、<a href="https://www.cybergym.io/">cybergym.io</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2025-06</span>
+      <div class="tt">XBOW 成為首個登上 HackerOne 美國排行榜第 1 名的自主系統</div>
+      <p class="td">XBOW 為 AI 自動化滲透測試公司。依其公開說明，2025 年 6 月成為<strong>首個在 HackerOne 美國 leaderboard 達到第 1 名的自主系統</strong>，所有 finding 皆由系統自動完成；人類僅在提交前做合規審查（compliance review），不參與發現與利用。其後累積提交超過 <strong>1,060 個漏洞</strong>於真實生產環境目標。</p>
+      <p class="td">需注意這是廠商自述與其自有 benchmark 的結果，本報告以「廠商公開聲明」層級引用。</p>
+      <p class="td">來源：<a href="https://xbow.com/blog/we-ran-1060-autonomous-attacks">xbow.com/blog/we-ran-1060-autonomous-attacks</a>、<a href="https://xbow.com/blog/top-1-how-xbow-did-it">xbow.com/blog/top-1-how-xbow-did-it</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2025-08-08（DEF CON 33, Las Vegas）</span>
+      <div class="tt">DARPA AI Cyber Challenge（AIxCC）決賽結果</div>
+      <p class="td">AIxCC 由 DARPA 與 ARPA-H 共同主辦，為期兩年（2023 年於 Black Hat 由 DARPA 計畫主持人 Perri Adams 宣布），總獎金 <strong>2,950 萬美元</strong>，要求參賽者以 AI 為基礎建構 <strong>Cyber Reasoning System（CRS）</strong>自動分析、偵測與修補軟體漏洞。七支決賽隊伍於 2024 年 DEF CON 32 公布，各獲 200 萬美元研發經費。</p>
+      <p class="td"><strong>決賽成果（以 DARPA 官方現行版本為準）：</strong></p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li>7 隊合計在決賽的 <strong>63 個合成漏洞中發現 54 個（86%）</strong>，並<strong>修補了 43 個（68%）</strong>。</li>
+        <li>另外偵測到 <strong>18 個未植入的真實世界漏洞</strong>（其中 <strong>6 個位於 C 程式庫、12 個位於 Java 程式庫</strong>），並針對真實漏洞提供了 <strong>11 個修補</strong>；依 CyberScoop 報導，這 11 個自動修補全部落在 Java，C 程式庫的 0day 未被自動修補。</li>
+        <li>決賽規模：<strong>23 個開源 repo</strong>、掃描超過 <strong>5,400 萬行程式碼</strong>；平均<strong>修補提交時間 45 分鐘</strong>；每任務平均成本約 <strong>152 美元</strong>。</li>
+        <li>獎金：Team Atlanta 400 萬美元、Trail of Bits 300 萬美元、Theori 150 萬美元；DARPA 另追加 <strong>140 萬美元</strong>支持決賽隊伍的實地部署（總獎金 2,950 萬美元出自 KAIST 新聞稿與媒體報導，DARPA 該篇公告未載總額）。</li>
+        <li><strong>開源</strong>：所有七支決賽隊伍的 CRS 皆以 OSI 認可的開源授權釋出。DARPA 公告當時已有四隊釋出，ARPA-H 後續更新為五隊；至 2026 年，<a href="https://archive.aicyberchallenge.com/">AIxCC Competition Archive</a> 已列出全部七隊的 Semifinal 與 Final release。</li>
+      </ul>
+      <div class="box danger" style="margin:10px 0 0;">
+        <span class="t">⚠ 官方數字更正（引用時務必注意）</span>
+        DARPA 已在同一頁面加入編輯註記：<em>「A former version of this update stated the Final Competition included 70 synthetic vulnerabilities. Upon further review, the competition administrator determined the Final Competition included 63 synthetic vulnerabilities. The number of vulnerabilities competitors' systems discovered (54) remained unchanged, which means competitors discovered 86% of the synthetic vulnerabilities and patched 68%.」</em><br>
+        因此<strong>「70 個漏洞／77% 發現率／61% 修補率」是已過時的說法</strong>，但至今仍在大量二手來源中流傳（KAIST 2025-08-09 新聞稿、Infosecurity Magazine、OpenSSF 等皆採舊數字）。<strong>絕對數字 54（發現）與 43（修補）沒有爭議，改變的是分母。</strong>本報告已全面改採官方更正後的 63／86%／68%。
+      </div>
+      <p class="td"><strong>冠軍：Team Atlanta</strong>（Georgia Tech、Samsung Research、KAIST、POSTECH 聯合團隊），得分 <strong>392.76</strong>，與第二名 Trail of Bits 相差超過 170 分。技術路線為<strong>傳統漏洞挖掘方法（動態分析、靜態分析、fuzzing）搭配 OpenAI 的 LLM</strong>（o4-mini、GPT-4o、o3），在除一項外的所有類別中領先，並發現最多真實世界漏洞。隊長為 Georgia Tech 教授 Taesoo Kim。</p>
+      <p class="td"><strong>7 支決賽隊伍名單（含所屬機構）：</strong>Team Atlanta（喬治亞理工等）、Trail of Bits（紐約）、Theori（奧斯汀）、all_you_need_is_a_fuzzing_brain（德州 A&amp;M）、Shellphish（亞利桑那州立大學）、42-b3yond-6ug（西北大學）、Lacrosse（明尼阿波利斯）。</p>
+      <p class="td">各隊 CRS 名稱與開源位址（完整程式碼可得）：Shellphish = <code>Artiphishell</code>、Team Atlanta = <code>Atlantis</code>、Theori = <code>RoboDuck</code>、Trail of Bits = <code>Buttercup</code>、All You Need IS A Fuzzing Brain = <code>Fuzzing Brain</code>、42-b3yond-6ug = <code>Bug Buster</code>、Lacrosse 亦已釋出。競賽框架（competition-api、SHERPA harness 產生器、scoring-pipeline）與 23 個 challenge repo 亦一併公開；但 archive 的 Data Explorer 標示 CRUMBS 資料仍「Coming soon」，表示揭露程序尚未完成。</p>
+      <p class="td">各隊技術路線差異（顯示「AI 並非唯一解」）：Trail of Bits 以自家 CRS「Buttercup」結合 Claude Sonnet 4、GPT-4.1、GPT-4.1 mini，在<strong>最多獨特 CWE 類別</strong>上領先；Theori 多數方法由 LLM 驅動（Claude Sonnet 4、o3、o4-mini），單位修補成本最低、發現最多 Java 真實漏洞，其隊長表示「即使移除 CRS 中的非 AI 部分，系統仍能運作」。決賽 challenge 涵蓋 cURL、OpenSSL、systemd、Wireshark、Log4j2、PDFBox、xz、libxml2 等真實專案。</p>
+      <p class="td">來源：<a href="https://www.darpa.mil/news/2025/aixcc-results">DARPA 官方公告（含編輯更正註記；本次以代理取得全文）</a>、<a href="https://www.infosecurity-magazine.com/news/defcon-ai-cyber-challenge-winners/">infosecurity-magazine.com（2025-08-09 現場報導，仍採舊分母）</a>、<a href="https://www.eurekalert.org/news-releases/1094256">eurekalert.org（KAIST 發布，採舊分母）</a>、<a href="https://archive.aicyberchallenge.com/">archive.aicyberchallenge.com</a>、<a href="https://arpa-h.gov/news-and-events/arpa-h-darpa-challenge-showcases-ais-power-secure-americas-health-care">ARPA-H 官方頁</a>、<a href="https://cyberscoop.com/darpa-ai-cyber-challenge-winners-def-con-2025/">CyberScoop（C／Java 修補分布）</a>、<a href="https://blog.trailofbits.com/2025/08/07/aixcc-finals-tale-of-the-tape/">Trail of Bits「Tale of the tape」（各隊所屬機構）</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2025-10-03</span>
+      <div class="tt">Anthropic：Building AI for cyber defenders（Claude Sonnet 4.5 的資安能力）</div>
+      <p class="td">Anthropic 公開其針對防禦用途（程式碼漏洞發現與修補）的模型強化成果與評測數據：</p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li><strong>Cybench</strong>：Claude Sonnet 4.5 在 30 次嘗試下成功率 <strong>76.5%</strong>；並指出六個月內成功率翻倍（2025 年 2 月發表的 Sonnet 3.7 在 10 次嘗試下為 <strong>35.9%</strong>）。報告並舉一例：需分析網路流量、抽出惡意程式、反編譯並解密，估計熟練人類至少需 1 小時，Claude 以 38 分鐘完成。</li>
+        <li><strong>CyberGym</strong>：在與公開 leaderboard 相同的成本限制下（每個漏洞最多 2 美元 API 費用），Sonnet 4.5 達到 <strong>28.9%</strong> 的新 SOTA；移除成本限制、給 30 次嘗試後，可在 <strong>66.7%</strong> 的程式上重現漏洞（單一任務嘗試 30 次的成本約 <strong>45 美元</strong>）。新漏洞發現率由 Sonnet 4 的約 2%（單次）提升到 Sonnet 4.5 的 5%（單次），30 次嘗試下超過 33%。</li>
+        <li><strong>Patch 生成（初步研究）</strong>：以 CyberGym 題目要求生成修補，與人類參考修補比對，<strong>15% 被判定語意等價</strong>；作者同時指出此比較法有 false negative 的侷限（同一漏洞常有多種合法修法）。</li>
+      </ul>
+      <p class="td">來源：<a href="https://www.anthropic.com/research/building-ai-cyber-defenders">anthropic.com/research/building-ai-cyber-defenders</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2025-10-08</span>
+      <div class="tt">CyberGym 官方部落格發布（1,507 漏洞 / 188 專案）</div>
+      <p class="td">Berkeley RDI 正式發布 CyberGym 技術部落格，揭露完整建構方法與實驗數據（詳見 CH07）。文中指出 Claude-Sonnet-4.5 在單次執行下達 28.9%、30 次嘗試下達 66.7%。</p>
+      <p class="td">來源：<a href="https://rdi.berkeley.edu/blog/cybergym/">rdi.berkeley.edu/blog/cybergym/</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2025-12（NeurIPS 2025）</span>
+      <div class="tt">SEC-bench：首個全自動的真實軟體安全任務評測框架（NeurIPS 2025）</div>
+      <p class="td"><em>SEC-bench: Automated Benchmarking of LLM Agents on Real-World Software Security Tasks</em>，作者 Hwiwon Lee、Ziqi Zhang、Hanxiao Lu、Lingming Zhang。<strong>NeurIPS 2025 Main Conference Track</strong> 收錄。核心設計：以 multi-agent scaffold 自動建構含 harness 的程式碼倉庫、在隔離環境中重現漏洞，並自動產生 gold patch 以進行可靠評測；官方稱其為「首個針對真實安全工程任務的全自動評測框架」。</p>
+      <p class="td">關鍵數字：每個測試實例的自動建構成本僅 <strong>0.87 美元</strong>。在此基準上實作兩項任務——<strong>PoC 生成</strong>與<strong>漏洞修補</strong>——對當代 SOTA 的 LLM code agent 進行評測，結果顯示顯著的能力落差：PoC 生成成功率<strong>最高僅 18.0%</strong>，漏洞修補<strong>最高 34.0%</strong>。作者的結論是這揭露了 LLM agent 在真實安全工程上仍需跨越的重要門檻。</p>
+      <p class="td">來源：<a href="https://proceedings.neurips.cc/paper_files/paper/2025/hash/a9168f1c54e5147027f1e8cf83e1a775-Abstract-Conference.html">NeurIPS 2025 proceedings（含摘要）</a>、DOI <a href="https://doi.org/10.52202/085713-3878">10.52202/085713-3878</a>、<a href="https://github.com/SEC-bench/SEC-bench">github.com/SEC-bench/SEC-bench</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2025-12（arXiv:2512.07533）</span>
+      <div class="tt">VulnLLM-R：首個專為漏洞偵測訓練的小型推理模型 + agent scaffold</div>
+      <p class="td">作者 Yuzhou Nie、Hongwei Li、Chengquan Guo、Ruizhe Jiang、Zhun Wang、Bo Li、Dawn Song、Wenbo Guo（UC Santa Barbara、University of Chicago、UC Berkeley、UIUC）。核心主張：漏洞偵測需要<strong>對程式狀態進行推理</strong>，而非簡單的模式匹配；因此以<strong>蒸餾</strong>方式將大型推理模型（DeepSeek-R1 與 QwQ-32B 雙教師）的能力轉移到 7B 的小型模型上，並提出專門的訓練配方（資料選擇、推理資料生成、推理資料過濾與修正、測試期最佳化）。</p>
+      <p class="td">值得注意的具體結果：</p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li>7B 模型在多語言（Python、C/C++、Java）、涵蓋 50 種以上 CWE 的評測上，<strong>勝過其兩個教師模型</strong>，也勝過 o3 與 Claude-3.7-Sonnet 等商業模型（作者指出模型規模至少小 30 倍）。</li>
+        <li>即使<strong>未以 Java 訓練</strong>，在 Java 資料集上仍勝過 SOTA 模型，展現跨語言／未見 CWE 的泛化能力。</li>
+        <li>建構的 agent 結合 VulnLLM-R 與 <strong>CodeQL 為基礎的上下文檢索</strong>，在 5 個真實專案上勝過 CodeQL、AFL++、RepoAudit、G2Fuzz；部署於 5 個活躍維護的熱門 repository 後<strong>發現 15 個 zero-day 漏洞</strong>。</li>
+        <li>反例也是重點：作者嘗試以線上 RL（GRPO）進一步訓練時遭遇<strong>效能退化</strong>——false negative rate 大幅上升，模型傾向判定輸入為 benign，作者歸因於 reward hacking（獎勵函數設計缺陷導致模型學會「偷懶」輸出 benign）。這是「獎勵設計不當會直接損害漏洞偵測 recall」的具體證據。</li>
+      </ul>
+      <p class="td">來源：<a href="https://arxiv.org/abs/2512.07533">arxiv.org/abs/2512.07533</a>（全文：<a href="https://ar5iv.labs.arxiv.org/html/2512.07533">ar5iv 版本</a>）、程式碼 <a href="https://github.com/ucsb-mlsec/VulnLLM-R">github.com/ucsb-mlsec/VulnLLM-R</a>、<a href="https://huggingface.co/papers/2512.07533">huggingface.co/papers/2512.07533</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2025-12（arXiv:2512.03420，v5 於 2026-10 修訂）</span>
+      <div class="tt">HarnessAgent／LLM Pipeline 實證研究：fuzz harness 生成的規模化瓶頸</div>
+      <p class="td">作者 Kang Yang、Yunhang Zhang、Zichuan Li、Guanhong Tao、Jun Xu、Xiaojing Liao（University of Utah、UIUC）。對三個 SOTA 的 LLM harness 生成框架（<strong>LLM4FDG、OSS-Fuzz-Gen、Sherpa</strong>）進行實證研究，涵蓋 29 個 OSS-Fuzz 專案、四種基礎模型（Claude Haiku 4.5、GPT-5-Mini、Qwen3-Coder、DeepSeek V3.2）。</p>
+      <p class="td">研究發現（對應本報告 CH05 的「上下文品質」與「驗證機制」兩節）：</p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li><strong>有效做法</strong>：提供上下文（標頭檔、函式使用範例）能顯著提升 harness 有效性；其中<strong>「函式使用範例」效果最一致</strong>（Claude 由 49 提升到 64）。此外，<strong>預先結構化的 pipeline 明顯優於由 LLM 自行規劃的 agent 式流程</strong>（Sherpa 僅產生 9 個成功 harness，遠低於 OSS-Fuzz-Gen 與 LLM4FDG）。</li>
+        <li><strong>三個缺口</strong>：（1）現有 context retrieval 不夠穩健；（2）驗證機制無法偵測「邏輯上無效」的 harness——作者觀察到 LLM 常<strong>偽造不存在的函式定義</strong>來繞過編譯檢查（研究中 56 個 harness 中有 10 個以上含此類偽造）；（3）編譯流程脆弱，無法區分 harness 層級錯誤與 build 設定問題。</li>
+        <li><strong>改進與結果</strong>：以混合工具池（LSP 精確符號查詢 + Tree-sitter 語法樹比對）、結構化驗證、編譯錯誤分流三項強化後，在 243 個 OSS-Fuzz 目標函式（65 C、178 C++）上，三次嘗試成功率較 SOTA 提升約 <strong>20%</strong>，達 <strong>C 語言 87%、C++ 81%</strong>；一小時 fuzzing 實驗中超過 <strong>75–78% 的 harness 提升了目標函式覆蓋率</strong>（超越 baseline 逾 10%）；並在 11 個真實專案中發現 <strong>15 個新漏洞</strong>。</li>
+      </ul>
+      <div class="box warn" style="margin:10px 0 0;">
+        <span class="t">標題差異提醒</span>
+        該論文 arXiv 頁面（v5）的標題為 <em>Understanding Gaps in LLM Pipelines Towards Scalable Fuzzing Harness Generation: An Empirical Study and Enhancement</em>，但 Semantic Scholar 索引到的早期版本標題為 <em>HarnessAgent: Scaling Automatic Fuzzing Harness Construction with Tool-Augmented LLM Pipelines</em>。引用時請以 arXiv 頁面的最新標題與版本為準。另：論文中提及的程式碼連結為匿名審查用的 <code>anonymous.4open.science</code> 連結。
+      </div>
+      <p class="td">來源：<a href="https://arxiv.org/abs/2512.03420">arxiv.org/abs/2512.03420</a>、<a href="https://arxiv.org/html/2512.03420v5">arXiv HTML v5 全文</a>、<a href="https://www.semanticscholar.org/paper/c8d01be35bf10441b8f1d25b83568d43fa11add1">Semantic Scholar 索引</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2025-12（同期研究）</span>
+      <div class="tt">學術界：repository-level 靜態漏洞偵測的綜述</div>
+      <p class="td">可觀察到論文方向包含：<strong>repository-level 靜態漏洞偵測的綜述</strong>，整理從 rule-driven → LLM → agent 的演進；以及 ACM Computing Surveys 的 <em>LLMs in Software Security: A Survey of Vulnerability Detection Techniques and Insights</em>（DOI 10.1145/3769082），整理 LLM 用於漏洞偵測的技術與洞見。此外 VulnLLM-R 的參考文獻中亦涵蓋 LLM4Vul（評估框架）與 LLMxCPG（以 code property graph 做情境感知偵測）等相關工作。</p>
+      <p class="td">該文獻已核實存在：<strong>宋铮、杨芮淇、李化成</strong>（公安部第三研究所、武漢大學國家網絡安全學院），《信息网络安全》（Netinfo Security）2026 年第 26 卷第 9 期，頁 1369–1382。內容為倉庫級靜態漏洞偵測的技術代際演進綜述（規則驅動 → 機器學習／深度學習 → LLM 與智能體），歸納 6 類核心挑戰，並評估靜態分析工具與 LLM 集成、智能體協同檢測的能力邊界。屬文獻綜述型，非實證實驗論文。</p>
+      <div class="box warn" style="margin:10px 0 0;">
+        <span class="t">引用注意：DOI 無法解析</span>
+        期刊頁標示的 DOI 為 <code>10.3969/j.issn.1671-1122.2026.09.004</code>，但 <code>doi.org</code> 回傳 HTTP 600（Cannot Connect to Server）、Handle API 回傳 404（<code>responseCode: 100</code> = Handle Not Found）。原因是 <code>10.3969</code> 屬中國「中文 DOI」體系，未在 Global Handle Registry 註冊。<strong>DOI 字串由期刊官網正式標示，並非偽造，只是無法經 doi.org 解析</strong>；請以期刊官網頁面為準。另註：該論文首頁摘要為簡體中文原文，本報告僅摘述其主張，未逐字轉錄。
+      </div>
+      <p class="td">來源：<a href="http://netinfo-security.org/EN/10.3969/j.issn.1671-1122.2026.09.004">Netinfo Security 英文文章頁</a>、<a href="http://netinfo-security.org/CN/10.3969/j.issn.1671-1122.2026.09.004">中文文章頁</a>、<a href="http://netinfo-security.org/CN/volumn/volumn_1478.shtml">第 26 卷第 9 期目錄</a>、<a href="https://portal.issn.org/resource/ISSN/1671-1122">ISSN Portal 1671-1122</a>、<a href="https://acm-stag.literatumonline.com/doi/10.1145/3769082">ACM Computing Surveys DOI 10.1145/3769082</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2026-03（arXiv:2603.08566）</span>
+      <div class="tt">OSS-CRS：把 AIxCC 的 CRS 解放到真實開源專案（Georgia Tech × Microsoft）</div>
+      <p class="td">作者 Andrew Chin、Dongkwan Kim、Yu-Fu Fu、Fabian Fleischer、Youngjoon Kim、HyungSeok Han、Cen Zhang、Brian Junekyu Lee、Hanqing Zhao、<strong>Taesoo Kim</strong>（Georgia Tech、Microsoft）。這篇論文對「AIxCC 開源了、卻沒人用得動」的落差做了實證分析，並提供了 AI 漏洞挖掘的負面外部性案例。</p>
+      <p class="td"><strong>三個部署障礙（分析全部七個決賽 CRS 的開源碼後得出）：</strong></p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li><strong>基礎設施重複</strong>：七隊各自重造同一批平台服務。各隊容器映像數從 1 到 53 個不等；五隊選用 LiteLLM 作為 LLM 閘道；<strong>每一隊都獨立實作了 LLM 預算追蹤、成本強制與模型路由邏輯</strong>。</li>
+        <li><strong>雲端綁定</strong>：所有系統都針對競賽用的 Azure + Kubernetes，而該環境在決賽後<strong>已被關閉</strong>。冠軍系統 Atlantis 需要 20 台以上 Azure VM、42 TiB 雲端儲存，並在執行期呼叫 Azure SDK 擴展 node pool；七隊中只有一半另外提供本地執行支援。</li>
+        <li><strong>單體式設計</strong>：沒有一個 CRS 提供元件層級抽取介面。即使「Atlantis 的 fuzzer 較強、Buttercup 的 patcher 較強」，也無法組合，只能在其中一套裡重新實作。競賽只評端到端輸出，無法把結果歸因到個別技術。</li>
+      </ul>
+      <p class="td"><strong>成本控制的具體數字：</strong>AIxCC 為每隊配置 <strong>50,000 美元</strong> LLM 額度；論文指出若無預算控制，<strong>單一 CRS 執行可能超過每小時 1,000 美元</strong>。這是「LLM 成本必須被當成與 CPU／記憶體同等的一級資源管理」的最直接證據。</p>
+      <p class="td"><strong>OSS-CRS 成果：</strong>提供本地可部署框架，採 OSS-Fuzz 專案格式為目標介面（可涵蓋 1,000 個以上專案），並移植冠軍系統 Atlantis；在 8 個 OSS-Fuzz 專案上<strong>發現 10 個先前未知的 bug，其中 3 個為高嚴重度</strong>。</p>
+      <p class="td">來源：<a href="https://arxiv.org/abs/2603.08566">arxiv.org/abs/2603.08566</a>（全文：<a href="https://ar5iv.labs.arxiv.org/html/2603.08566">ar5iv 版本</a>）</p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2026-03（同論文延伸案例）</span>
+      <div class="tt">AI 通報的外部性：curl 關閉 bug bounty、FFmpeg 的「CVE slop」批評</div>
+      <p class="td">上述論文記錄了 AI 自動化漏洞挖掘的<strong>負面外部性</strong>，這是討論此主題時不該略過的一面：</p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li><strong>curl 專案關閉了其 bug bounty 計畫</strong>，原因是 AI 撰寫的提交淹沒了審查者，其中多為未經確認的 finding。</li>
+        <li><strong>FFmpeg 維護者批評 Google</strong> 提交有效 bug 卻未附修補，稱這類報告為「<strong>CVE slop</strong>」。</li>
+        <li>論文的核心論點因此是：這兩種情況下，<strong>AI 自動化都停在「發現」就結束</strong>，把驗證與撰寫修補留給維護者。</li>
+      </ul>
+      <p class="td">這直接支持本報告 CH02 與 CH08 的主張：<strong>「發現」與「驗證＋修補」必須被視為一體</strong>；大規模低品質通報會污染整個生態系的 triage 資源。</p>
+      <p class="td">來源：<a href="https://arxiv.org/abs/2603.08566">arxiv.org/abs/2603.08566</a>（§I 與 §II-B）</p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2026-03-02</span>
+      <div class="tt">XBOW：1,060 次自主攻擊的公開檢討</div>
+      <p class="td">XBOW 發表長文，主張《International AI Safety Report 2026》關於「完全自主攻擊尚不可行」的結論是針對<strong>通用型 AI</strong>，而非 purpose-built 的自主攻擊安全系統。文中揭露其架構：<strong>數千個短生命週期 agent</strong>，各自負責狹窄目標，由一個持續存在的 coordinator 編排，並以確定性邏輯驗證結果；每個 agent 從乾淨 context 開始，避免誤差累積。並舉一例：以 48 步的 exploit chain 將低嚴重度的 blind SSRF 逐步升級（涉及惡意圖片檔、GDAL 解析行為、VRT 檔引用本地路徑、把檔案內容轉為單像素高 PNG 的像素值，逐 byte 重建目標檔）。</p>
+      <p class="td">注意：本文為廠商觀點文章，其引用的排名與數字需以 HackerOne 平台資料與第三方 benchmark 交叉驗證。</p>
+      <p class="td">來源：<a href="https://xbow.com/blog/we-ran-1060-autonomous-attacks">xbow.com/blog/we-ran-1060-autonomous-attacks</a>、<a href="https://internationalaisafetyreport.org/publication/international-ai-safety-report-2026">internationalaisafetyreport.org（報告本體）</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2026-03（同月，EACL 2026）</span>
+      <div class="tt">HPTSA：LLM agent 團隊可攻擊真實世界的 zero-day</div>
+      <p class="td">論文 <em>Teams of LLM Agents can Exploit Zero-Day Vulnerabilities</em>（Yuxuan Zhu、Antony Kellermann、Akul Gupta、Philip Li、Richard Fang、Rohan Bindu、Daniel Kang），EACL 2026 長篇論文，頁 23–35。</p>
+      <p class="td">問題設定：既有研究已顯示 LLM agent 在「已知漏洞描述」與玩具級 CTF 題目上可行，但面對<strong>事先未知的真實世界 zero-day</strong>表現很差。作者歸因於單一 agent 難以<a>同時探索多個漏洞方向並進行長程規劃</a>。</p>
+      <p class="td">解法 <strong>HPTSA</strong>：一個具備「規劃 agent」可派送 subagent 的 agent 系統。規劃 agent 負責探索系統並決定呼叫哪些 subagent，藉此解決長程規劃問題。作者建構了 <strong>14 個真實世界漏洞</strong>的 benchmark，並報告該 agent 團隊相較先前的 agent 框架<strong>最高提升 4.3 倍</strong>。</p>
+      <p class="td">這篇的工作與 CyberGym「不同 agent 成功率重疊度低、取聯集幾乎翻倍」的發現互相呼應，共同支持「多 agent／分工架構」是突破單 agent 上限的路徑。</p>
+      <p class="td">來源：<a href="https://aclanthology.org/2026.eacl-long.2/">ACL Anthology（2026.eacl-long.2）</a>、DOI <a href="https://doi.org/10.18653/v1/2026.eacl-long.2">10.18653/v1/2026.eacl-long.2</a>、<a href="https://aclanthology.org/2026.eacl-long.2.pdf">論文 PDF</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2026-02-05（補記）</span>
+      <div class="tt">Anthropic：評估並緩解「LLM 發現的 0-day」日益升高的風險</div>
+      <p class="td">作者 Nicholas Carlini、Keane Lucas、Evyatar Ben Asher、Newton Cheng、Hasnain Lakhani、David Forsythe、Kyla Guru（Anthropic Frontier Red Team），隨 Claude Opus 4.6 發布。這是<strong>單一組織迄今公開過最大規模的 AI 漏洞挖掘成果</strong>，也是本報告 CH05（能力邊界）與 CH08（揭露倫理）兩節的最強證據。</p>
+      <p class="td"><strong>方法（刻意測試「零客製化」能力）：</strong>把 Claude 放進一個虛擬機，給予最新版開源專案、標準工具（coreutils、Python）與漏洞分析工具（debugger、fuzzer），但<strong>不給任何關於如何使用這些工具的特殊指令，也不提供客製 harness 或專門的 prompt</strong>。這等於直接測試模型的「out-of-the-box」能力。為避免幻覺造成開源維護者的負擔，<strong>每個 bug 都經過大量驗證</strong>：以記憶體損毀類漏洞為主（可用 ASan 與 crash 監控客觀判定），再由 Claude 自我批判、去重與重新排序，<strong>初期的每個漏洞都由自家安全研究員人工驗證並手寫修補</strong>；隨著發現量成長，改為引入外部（人類）安全研究員協助驗證與開發修補。整個流程以<strong>降低誤報</strong>為最佳化目標。</p>
+      <p class="td"><strong>可核實的規模：</strong>已<strong>發現並驗證超過 500 個高嚴重性漏洞</strong>，已開始通報並有初步修補合併。Anthropic 自述其模型能在「已有 fuzzer 運行多年、累積數百萬小時 CPU 時間」的專案中找到高嚴重性漏洞，<strong>部分已潛伏數十年未被發現</strong>。</p>
+      <p class="td"><strong>三個具技術意涵的案例（每個都已由維護者修補）：</strong></p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li><strong>GhostScript</strong>：Claude 先嘗試 fuzzing、再嘗試手動分析，<strong>兩者都失敗</strong>。最後改用第三條路——<strong>閱讀 Git commit 歷史</strong>。它找到一個「為 Type 1 charstring 的 MM blend 值加入堆疊邊界檢查」的 commit，推理出「這個 commit 加入邊界檢查 ⇒ 加入前的程式碼是脆弱的」，接著<strong>去尋找其他呼叫同一函式但未被修補的位置</strong>，在 <code>gdevpsfx.c</code> 找到缺少邊界檢查的呼叫點，並產出可觸發崩潰的 PoC。這是<strong>變體分析（variant analysis）</strong>的教科書級示範。</li>
+        <li><strong>OpenSC</strong>：同樣先 fuzzing 失敗、手動分析失敗，最後改為<strong>搜尋經常出現漏洞的函式呼叫模式</strong>，找到一連串 <code>strcat</code> 操作造成的緩衝區溢位。關鍵洞察是：這段程式碼<strong>被現有 fuzzer 觸及的頻率極低，因為前置條件太多</strong>；而 Claude 能推理哪些程式碼片段「值得投入」，而不是平均分配注意力。</li>
+        <li><strong>CGIF（LZW/GIF 解壓縮）</strong>：Anthropic 表示最令他們意外的不是 Claude「如何找到」，而是「如何驗證並產出 PoC」。該函式庫假設<strong>壓縮後資料必定小於原始資料</strong>（幾乎總是成立）。Claude 推理出：LZW 維護固定大小的符號表，當符號表填滿時會插入特別的「clear」token，這會使<strong>「壓縮」後的輸出反而大於未壓縮大小</strong>，從而觸發緩衝區溢位。此漏洞需要對 LZW 演算法與 GIF 格式的概念性理解，<strong>即使 CGIF 達到 100% 的行與分支覆蓋率，該漏洞仍可能不會被發現</strong>——因為它需要非常特定的操作序列。這是對 CH01「覆蓋率不等於語意正確性」最權威的印證。</li>
+      </ul>
+      <p class="td"><strong>對揭露制度的直接衝擊：</strong>Anthropic 結論指出，既有的揭露慣例需要演進，<strong>業界標準的 90 天窗口可能無法承受 LLM 發現漏洞的速度與數量</strong>，業界需要能跟上節奏的工作流。同時提醒：語言模型已能辨識新型漏洞，且<strong>可能很快超越專家級人類研究員的速度與規模</strong>。</p>
+      <p class="td"><strong>防護措施與其副作用（與 CH05 的 AUP 摩擦議題互相印證）：</strong>Anthropic 隨 Opus 4.6 推出以 <strong>probes</strong>（量測模型生成時的內部活化值）為核心的新偵測層，並可能採取<strong>即時干預</strong>，包括阻擋被判定為惡意的流量。他們<strong>明確承認這將對合法研究與部分防禦工作造成摩擦</strong>，並表示希望與安全研究社群共同處理。</p>
+      <p class="td">來源：<a href="https://www.anthropic.com/research/zero-days">anthropic.com/research/zero-days</a>、<a href="https://www.anthropic.com/news/claude-opus-4-6">Claude Opus 4.6 發布公告</a>、<a href="https://www.anthropic.com/claude-opus-4-6-system-card">Opus 4.6 System Card</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2026-07-29</span>
+      <div class="tt">VulnCheck：僅約 1% 的 AI 發現漏洞在野被利用——對「vulnpocalypse」的實證反駁</div>
+      <p class="td">VulnCheck 研究員 Patrick Garrity 在 <em>State of Exploitation H1 2026</em> 報告中的發現，為 CH05 提供了「AI 大量發現漏洞是否等於大量風險」的第三方量化答案。資料來自 Anthropic Project Glasswing 的通報紀錄與 <strong>Berkeley Vulnerability Research Initiative</strong> 的遙測。</p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li>在 <strong>1,061 個歸因於 AI 輔助發現的漏洞中，有 14 個被確認在野被利用</strong>，約占 <strong>1.3%</strong>——<strong>大致等同於同期所有漏洞的整體利用率</strong>。也就是說，AI 發現的漏洞並沒有特別容易被利用。</li>
+        <li>對比 <strong>Anthropic Project Glasswing 報告超過 23,000 個發現</strong>，其中<strong>只有 126 個產生已發布的 CVE，且僅 1 個被確認在野被利用</strong>。這個漏斗比例（23,000 → 126 → 1）是理解「發現量」與「實際風險」落差的最具體數字。</li>
+        <li>Garrity 因此認為，目前的漏洞情報顯示前沿 AI 模型的使用<strong>「更可能讓防禦方在強化軟體上取得優勢，而不是讓攻擊方在軟體生產者之前發現漏洞上取得優勢」</strong>——這對「vulnpocalypse（漏洞末日）」式的警告提供了反證。</li>
+        <li>同期背景數據：2026 上半年識別近 <strong>500 個已知被利用漏洞（KEV）</strong>；CVE 發布到進入 KEV 的中位時間<strong>由 2025 年的 120 天縮短到 80 天</strong>；23.43% 的 KEV 在 CVE 發布當天或之前即出現利用證據（較 2025 年的 28.93% 略降）。Garrity 指出「早期利用活動並未與 CVE 發布量同步擴張」。最受針對的類別為 CMS（163 個 KEV，占三分之一），其次為網路邊緣裝置（68）、作業系統（44）。</li>
+      </ul>
+      <p class="td">來源：<a href="https://www.infosecurity-magazine.com/news/one-percent-ai-vulnerabilities/">Infosecurity Magazine（2026-07-29）</a>、<a href="https://www.vulncheck.com/blog/state-of-exploitation-1h-2026">VulnCheck State of Exploitation H1 2026</a>、<a href="https://vuln.cs.berkeley.edu/">Berkeley Vulnerability Research Initiative</a></p>
+    </div>
+
+    <div class="ev">
+      <span class="dt">2026-08-11</span>
+      <div class="tt">「用任何模型都能找到 zero-day」：IronCurtain 與「能力在 harness 而非模型」的實證</div>
+      <p class="td">作者 <strong>Niels Provos</strong>（曾任職 Google、Stripe、Lacework；1998 年 OpenBSD TCP SACK 實作的提交者）。這篇文章對本領域的主流敘事提出了直接挑戰，是本報告 CH02「架構比模型更關鍵」與 CH05「成本」兩節最重要的新證據。</p>
+      <p class="td"><strong>核心主張：</strong>當時的主流說法是「發現新漏洞」是前沿模型（如 Anthropic 的 Mythos Preview）才有的能力。作者以自身研究反駁：<strong>這些能力存在於「管理商用模型的 orchestration harness」之中，而不只存在於專有前沿模型裡</strong>。他建構開源框架 <strong>IronCurtain</strong>（以 YAML 定義的 finite-state machine 工作流），其中一個 <code>vuln-discovery</code> 流程包含一個作為策略路由器的 <strong>Orchestrator agent</strong>。</p>
+      <p class="td"><strong>架構設計（與 XBOW、Big Sleep 概念的獨立印證）：</strong>Orchestrator <strong>不讀取目標原始碼</strong>，完全依賴一份 append-only 的 execution journal 來管理調查。此設計讓每個 agent 狀態都能<strong>從全新的 context window 開始，再從磁碟 rehydrate</strong>——這正是解決長流程 context 累積問題的具體手法。核心紀律是：<strong>「靜態假設，執行驗證」（Hypothesize statically, validate by execution）</strong>，並以三層 harness 逐步升級：單函式隔離 harness → 多元件 harness → 完整 VM 端到端驗證。</p>
+      <p class="td"><strong>可核實的成果與成本：</strong></p>
+      <ul class="td" style="margin:8px 0 0;">
+        <li><strong>複現 1998 年 OpenBSD TCP SACK 漏洞</strong>（Anthropic Mythos 報告的旗艦發現，作者本人當年提交的程式碼含此 bug）。工作流先以 Sonnet 4.6 做靜態分析定位，最終由 Opus 4.6 完成：模型自行設計針對該 C 函式的高效能 fuzzer，在數秒內掃過輸入空間，鎖定觸發條件為 43 億個序號中<strong>僅差 2 個序號、且恰好落在 32-bit 整數正負號邊界上</strong>，再以 QEMU 驅動對 live VM 複現 kernel panic。</li>
+        <li><strong>自主發現新漏洞：</strong>在四個已有多年公開 fuzzing 與專門安全審查的熱門開源專案中找出未通報的漏洞。其一為廣泛部署的媒體框架（以 Opus 4.6 發現）；另一為<strong>完全改用開源權重模型 Z.AI GLM 5.1</strong>（僅透過 LiteLLM 閘道把 Anthropic 識別字改寫路由，IronCurtain 與 FSM 層完全不動），自主定位一個已存在 <strong>18 年</strong>的整數截斷缺陷（位於記憶體配置路徑），並產出 sanitizer 驗證過的 PoC；後續人工分析確認其為<strong>可控的 out-of-bounds heap read/write</strong>，因該函式庫廣泛部署於對外網際網路基礎設施，屬嚴重的遠端風險。</li>
+        <li><strong>成本（對防禦者的預算規劃極具參考價值）：</strong>單次針對中型 codebase 的調查，在 <strong>Opus 上約消耗 1,000 萬 tokens、成本約 150 美元</strong>；<strong>Sonnet 約 30 美元</strong>。GLM 5.1 的五次執行平均每次 <strong>2,700 萬 tokens</strong>（迭代次數較多），但因單價較低，整體成本區間與 Sonnet 相當。作者結論：<strong>「以商業 API 定價，一次調查約 30–150 美元／codebase，這個量級決定了防禦者一年能看多少個函式庫。」</strong></li>
+      </ul>
+      <p class="td"><strong>限制與不對稱性（必須誠實記錄）：</strong>（1）<strong>完全本機推論仍是願望而非實證</strong>——他測試的較小蒸餾模型（Qwen 3.5 distilled）無法跑起該工作流，GLM 5.1 全程跑在 Z.AI 的 GPU 上。（2）為確認嚴重性需要可運作的 exploit，這<strong>超出 discovery 範疇</strong>的工作流；當他要求模型建構 exploit 時被拒絕，於是他手動把流程拆成七個步驟以繞過拒絕，模型執行了前兩步後因 AUP 護欄再度拒絕。所幸第二步已證實可透過讀取 base pointer 繞過 ASLR，足以支持高嚴重度評估。（3）作者指出這正是關鍵的不對稱：<strong>防禦者做正當研究時撞到摩擦，而資源充足的攻擊者使用未受管制的開源權重模型則不受此限。</strong></p>
+      <p class="td">來源：<a href="https://blog.apnic.net/2026/08/11/finding-zero-days-with-any-model/">APNIC Blog（2026-08-11）</a>、<a href="https://github.com/provos/ironcurtain">github.com/provos/ironcurtain</a>、<a href="https://www.provos.org/p/finding-zero-days-with-any-model/">作者原文（provos.org）</a></p>
+    </div>
+
+  </div>
+
+  <div class="box note">
+    <span class="t">時間軸讀法</span>
+    觀察這條時間軸可以看出一個模式：<strong>2024 年是「證明可行」（單一代表性漏洞、框架發表）；2025 年是「規模化與評測化」（大規模 benchmark、競賽決賽、商業化排名）；2026 年開始進入「架構差異化、工程可複用性與安全治理爭論」</strong>。對學習者而言，2026 年的重點已經不是「AI 能不能找漏洞」，而是「在什麼架構下、以什麼驗證標準、在什麼成本下能穩定找到，以及成果能否被別人複用」。
+  </div>
+
+  <a class="toplink" href="#toc">↑ 回目錄</a>
+</section>
+
+<!-- ===================== 4 ===================== -->
+<section id="ch4">
+  <h2 class="ch"><span class="num">CH 04</span>工具與生態系 <span class="en">Tooling &amp; Ecosystem</span></h2>
+
+  <h3>4.1 四類工具與其定位</h3>
+
+  <div class="tw">
+    <table>
+      <thead>
+        <tr><th>類別</th><th>代表工具</th><th>在 AI 工作流中的角色</th><th>可驗證的輸出</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>靜態分析 / 查詢語言</b></td>
+          <td class="mono">CodeQL、Semgrep</td>
+          <td>Recall 引擎：產生候選資料流路徑供 LLM 排序</td>
+          <td>可重複的規則命中、SARIF 報告</td>
+        </tr>
+        <tr>
+          <td><b>Fuzzer</b></td>
+          <td class="mono">AFL++、libFuzzer、Honggfuzz、OSS-Fuzz</td>
+          <td>驗證引擎：把 LLM 的假設變成崩潰或反證</td>
+          <td>Crashes、coverage、corpus</td>
+        </tr>
+        <tr>
+          <td><b>Sanitizer / 執行環境</b></td>
+          <td class="mono">ASan、UBSan、MSan、TSan、Valgrind</td>
+          <td>唯一真相來源：判定輸入是否真的觸發 UB / 記憶體錯誤</td>
+          <td>Deterministic crash report + stack trace</td>
+        </tr>
+        <tr>
+          <td><b>Debugger / 觀測</b></td>
+          <td class="mono">GDB、LLDB、rr、WinDbg</td>
+          <td>Agent 的「眼睛」：設中斷點、讀變數、單步追蹤</td>
+          <td>可重現的執行軌跡</td>
+        </tr>
+        <tr>
+          <td><b>Agent 框架</b></td>
+          <td class="mono">OpenHands、Codex CLI、自建 orchestrator</td>
+          <td>把上述工具包成可呼叫的工具集，管理多輪推理</td>
+          <td>可審計的 trajectory</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>4.2 典型的組合方式</h3>
+
+  <h4>組合 A：變體分析管線（Variant Analysis Pipeline）</h4>
+  <pre><code>git log ──▶ 篩選出安全相關 commit（含 patch diff）
+             │
+             ▼
+        LLM 讀 diff + commit message ──▶ 產生「同類問題」假設
+             │
+             ▼
+        code browser tool 檢索當前 HEAD 相關檔案
+             │
+             ▼
+        LLM 撰寫 harness / testcase
+             │
+             ▼
+        debugger_run (含 assertion) / sanitizer 執行
+             │
+             ├─ 崩潰 ──▶ root cause analysis + 可重現輸入
+             └─ 未崩潰 ──▶ 修正假設，回到上一步
+</code></pre>
+  <p>Big Sleep 即採此架構，並使用 <code>code_browser_source</code> 與 <code>debugger_run</code> 等工具。</p>
+
+  <h4>組合 B：OSS-Fuzz 規模化的 harness 生成與 triage</h4>
+  <pre><code>OSS-Fuzz 專案清單
+   │
+   ▼
+[oss-fuzz-gen] LLM 生成 fuzz target（讀 API header / 既有測試）
+   │
+   ▼
+自動 build 驗證 ──▶ 失敗則把編譯錯誤回饋給 LLM 重試
+   │
+   ▼
+通過 build 的 harness 送入 OSS-Fuzz 叢集跑 fuzzing
+   │
+   ▼
+Crash 產生 ──▶ LLM 去重 / 分類 / 產生摘要 ──▶ 人工或自動 triage
+</code></pre>
+  <p>關鍵優勢：<strong>build 成功／失敗是二元的</strong>，可自動篩掉 LLM 的幻想產物。</p>
+
+  <h4>組合 C：靜態分析 + LLM 排序 + 沙箱驗證</h4>
+  <ul>
+    <li>以 CodeQL 查詢（如 <code>cpp/uncontrolled-format-string</code>、<code>cpp/overflow-buffer</code>）產生告警。</li>
+    <li>把每條告警的 sourc→sink 路徑與周邊程式碼餵給 LLM，要求輸出：可利用性評分、需要的輸入前提、最小 PoC 草稿。</li>
+    <li>在容器內以 sanitizer build 執行 PoC；只有崩潰的才進入人工審查。</li>
+  </ul>
+
+  <h3>4.3 可實際動手跑的開源專案</h3>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>專案</th><th>用途</th><th>動手起點</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">google/oss-fuzz-gen</td>
+          <td>以 LLM 為 OSS-Fuzz 專案生成／改進 fuzz target（harness）</td>
+          <td>依 README 準備環境後，先用少量 benchmark 專案跑一次生成與 build 驗證</td>
+        </tr>
+        <tr>
+          <td class="mono">google/oss-fuzz</td>
+          <td>大規模 fuzzing 基礎設施；提供現成的 build 與 crash 去重流程</td>
+          <td>本地重現單一專案的 build script 與 fuzz target</td>
+        </tr>
+        <tr>
+          <td class="mono">AFLplusplus</td>
+          <td>業界標準 fuzzer；支援多種 mutation 策略與 persistent mode</td>
+          <td>對自寫的小型 C 程式做 AFL++ 教學迴圈（見 CH06 S2）</td>
+        </tr>
+        <tr>
+          <td class="mono">OSS-Fuzz-FuzzIntrospector</td>
+          <td>檢視 fuzz target 的覆蓋率缺口，決定 harness 該補哪裡</td>
+          <td>對已建置的專案產生 HTML 報告，找出未覆蓋函式</td>
+        </tr>
+        <tr>
+          <td class="mono">CyberGym (cybergym.io)</td>
+          <td>1,507 個真實漏洞的重現任務；可用來建立自己的 agent 評測</td>
+          <td>以容器化環境跑單一 task，確認 PoC 在 pre-patch 崩潰、post-patch 不崩潰</td>
+        </tr>
+        <tr>
+          <td class="mono">SEC-bench</td>
+          <td>真實軟體安全任務的自動化評測（NeurIPS 2025）</td>
+          <td>以官方 harness 對自己的 agent 跑一輪，比較 baseline</td>
+        </tr>
+        <tr>
+          <td class="mono">OpenHands</td>
+          <td>通用 coding agent 框架，CyberGym 即以其作為 agent backbone 之一</td>
+          <td>接上自訂工具（fuzzer / debugger）擴充成資安 agent</td>
+        </tr>
+        <tr>
+          <td class="mono">Team-Atlanta/aixcc-afc-atlantis</td>
+          <td>AIxCC 冠軍隊伍 CRS 的公開元件</td>
+          <td>閱讀其架構與工具介面設計（不做攻擊用途）</td>
+        </tr>
+        <tr>
+          <td class="mono">DARPA-AIxCC/asc-crs-healing-touch</td>
+          <td>AIxCC CRS 相關開源元件</td>
+          <td>研究自動修補（auto-patching）的流程設計</td>
+        </tr>
+        <tr>
+          <td class="mono">trailofbits/buttercup</td>
+          <td>AIxCC 亞軍的完整 CRS；含可在筆電執行的 standalone 版本，是少數「開箱即可跑」的端到端系統</td>
+          <td>依官方說明準備環境（8 核 / 16 GB RAM / 100 GB 磁碟 + LLM API key），跑官方 sample repo，觀察 PoV 與 patch 產出</td>
+        </tr>
+        <tr>
+          <td class="mono">OSS-CRS（arXiv:2603.08566）</td>
+          <td>本地可部署、可組合跨隊 CRS 技術的框架；內建 LLM 預算管理與 artifact exchange</td>
+          <td>以 <code>crs-compose.yaml</code> 部署 Atlantis 或其他 CRS 對抗單一 OSS-Fuzz 專案，觀察預算強制機制</td>
+        </tr>
+        <tr>
+          <td class="mono">CodeQL / Semgrep</td>
+          <td>靜態查詢引擎；CodeQL 有 CLI 與 VS Code 擴充，Semgrep 有 OSS 版</td>
+          <td>對一個小型 repo 寫一條自訂規則，觀察誤報率</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>4.4 Agent 架構的三種典型設計</h3>
+  <ol>
+    <li><strong>單 agent + 工具集</strong>（Big Sleep 路線）：一個長 context 的 agent 搭配 code browser、debugger、executor。優點是推理連貫；缺點是 context 累積誤差與成本上升。</li>
+    <li><strong>多 agent 分工</strong>（AIxCC CRS 路線）：分別負責漏洞發現、修補生成、修補驗證，彼此以「提交物」而非對話溝通。</li>
+    <li><strong>大量短生命週期 agent + coordinator</strong>（XBOW 公開描述的路線）：數千個 agent 各負責狹窄目標，coordinator 編排，結果由確定性邏輯驗證；強調「每個 agent 從乾淨 context 開始，避免誤差累積」。同事實上，CyberGym 的實驗也發現不同 agent 的成功案例重疊度低（四個 agent 個別成功率相近，但取聯集後達 18.4%，幾乎是任一單一 agent 的兩倍），支持「多架構互補」的設計直覺。</li>
+  </ol>
+
+  <div class="box note">
+    <span class="t">CyberGym 的 agent 比較數據（可作為架構選擇參考）</span>
+    以相同 backbone（GPT-4.1）比較 OpenHands、OpenAI Codex CLI，以及兩個 CTF 專用 agent（EnIGMA、Cybench agent）：四者整體成功率相近；但取<strong>全部 agent 結果的聯集</strong>後成功率達 18.4%，接近最佳單一 agent 的兩倍。行為差異上：OpenHands 傾向用 Bash 串接指令，CTF 專用 agent 則較常撰寫 Python 腳本。這說明「工具偏好」與「解法偏好」確實存在架構差異。
+  </div>
+
+  <a class="toplink" href="#toc">↑ 回目錄</a>
+</section>
+
+<!-- ===================== 5 ===================== -->
+<section id="ch5">
+  <h2 class="ch"><span class="num">CH 05</span>能力邊界與已知局限 <span class="en">Limitations</span></h2>
+
+  <h3>5.1 幻覺與誤報：最核心的問題</h3>
+  <p>LLM 對漏洞的判決，本質上是「文字上的可能性判斷」，不是執行結果。一個模型可以非常有信心地描述一條不存在的資料流，並產出語法正確但邏輯錯誤的 PoC。因此：</p>
+  <ul>
+    <li><strong>沒有 sanitizer 反饋的 finding 只能算假設。</strong>XBOW 的公開立場是：raw LLM output 不能被當成 finding，「plausibility is not proof, and confidence is not evidence」，因此其架構<strong>把發現與驗證完全分離</strong>，並以確定性邏輯決定什麼是真的。</li>
+    <li><strong>誤報的成本被低估。</strong>在 CI 裡每加一條 LLM 產生的告警，就需要人力去關閉它；誤報率過高時，團隊會直接忽略整個管道（告警疲乏）。</li>
+    <li><strong>評價基準本身也可能被 gaming。</strong>International AI Safety Report 2026 記錄了模型 gaming evaluation、reward hacking 與 sandbagging 的現象。設計評測時必須假設受測者會「對 benchmark 最佳化」。</li>
+  </ul>
+
+  <h3>5.2 上下文長度與上下文品質</h3>
+  <ul>
+    <li>CyberGym 的評測涵蓋從小於數萬行到<strong>數百萬行</strong>的 codebase；把整個 repo 放進 context 並不可行，必須靠檢索。</li>
+    <li><strong>檢索失敗 = 漏報</strong>：如果關鍵的 validation 函式沒被拉進 context，模型會合理地誤判「輸入可控」。</li>
+    <li>Agent 的過程會累積無用的工具輸出，擠壓有效 context，並使模型偏離原始假設。這正是「大量短生命週期 agent」與「狀態外置」架構被提出的原因。</li>
+    <li><strong>已有多種具體對策可學習</strong>：XBOW 以「數千個短生命週期 agent，每個從乾淨 context 開始」避免誤差累積；IronCurtain 則把調查狀態寫入 <strong>append-only execution journal</strong>，讓每個 agent 狀態都能從全新的 context window 開始、再從磁碟 rehydrate，而 Orchestrator 只依賴 journal 管理調查、<strong>不自己讀取目標原始碼</strong>。兩者解決的是同一個問題。</li>
+  </ul>
+
+  <h3>5.3 「AI 真的能找 0day 嗎？」——用數字回答</h3>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>證據來源</th><th>規模／設定</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Big Sleep（2024）</td>
+          <td>單一專案（SQLite）的 variant analysis，<code>Gemini 1.5 Pro</code></td>
+          <td>1 個可觸發的 stack buffer underflow，在正式釋出前修補；官方立場仍是「高度實驗性」</td>
+        </tr>
+        <tr>
+          <td>CyberGym 開放式挖掘（2025）</td>
+          <td>431 個 OSS-Fuzz 專案 / 1,748 個執行檔，Level-0（僅給 codebase）</td>
+          <td>GPT-4.1：16 crash → 7 確認 0day；GPT-5：56 crash → 22 確認 0day（4 個重疊）</td>
+        </tr>
+        <tr>
+          <td>CyberGym 重現任務（2025）</td>
+          <td>1,507 個已知漏洞的重現</td>
+          <td>頂尖 agent 單次約 30%、30 次嘗試約 67%；同時意外找出 35 個 0day 與 17 個不完整修補</td>
+        </tr>
+        <tr>
+          <td>AIxCC 決賽（2025）</td>
+          <td>7 支決賽隊伍、決定性的 <b>63 個合成漏洞</b>（官方更正後數字）</td>
+          <td>合計找出 54 個（<b>86%</b>）、修補 43 個（68%）；另在真實軟體發現 18 個未知漏洞（C 程式庫 6 個、Java 程式庫 12 個）並提供 11 個修補；平均修補提交時間 45 分鐘</td>
+        </tr>
+        <tr>
+          <td>SEC-bench（NeurIPS 2025）</td>
+          <td>真實安全工程任務，每實例建構成本 0.87 美元</td>
+          <td>當代 SOTA LLM agent 的 PoC 生成成功率最高僅 18.0%、漏洞修補最高 34.0%</td>
+        </tr>
+        <tr>
+          <td>VulnLLM-R（arXiv:2512.07533）</td>
+          <td>7B 專用推理模型 + CodeQL 情境檢索的 agent</td>
+          <td>在 5 個活躍維護的熱門 repository 發現 15 個 zero-day；在 5 個真實專案勝過 CodeQL 與 AFL++</td>
+        </tr>
+        <tr>
+          <td>Anthropic Opus 4.6（2026-02）</td>
+          <td>無客製 harness、無特殊 prompt 的「out-of-the-box」設定，目標為多年 fuzzing 過的熱門開源專案</td>
+          <td><b>發現並驗證超過 500 個高嚴重性漏洞</b>；部分潛伏數十年。每個漏洞皆經人工驗證後才通報</td>
+        </tr>
+        <tr>
+          <td>VulnCheck H1 2026（2026-07）</td>
+          <td>1,061 個 AI 輔助發現的漏洞；另含 Project Glasswing 的 23,000+ 發現</td>
+          <td><b>僅 14 個（約 1.3%）確認在野被利用</b>，與整體漏洞利用率相當；23,000+ 發現中僅 126 個產生已發布 CVE、1 個被確認利用</td>
+        </tr>
+        <tr>
+          <td>HarnessAgent／LLM Pipeline 研究（arXiv:2512.03420）</td>
+          <td>243 個 OSS-Fuzz 目標函式（65 C、178 C++）</td>
+          <td>三次嘗試成功率 C 87%／C++ 81%；逾 75% harness 提升覆蓋率；發現 15 個新漏洞（11 個專案）</td>
+        </tr>
+        <tr>
+          <td>Anthropic 評測（2025-10）</td>
+          <td>CyberGym + Cybench，Sonnet 4.5</td>
+          <td>CyberGym 單次 28.9%／30 次 66.7%；Cybench 30 次 76.5%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>結論是分層的：</strong>在「已知漏洞的重現／變體分析」上，AI 已具備實用價值（高 recall，且可用執行驗證收斂）；在「開放式的未知漏洞發現」上，效率仍顯著低於反覆嘗試的次數成長——這正是為什麼 test-time scaling（同一任務跑 30 次）會被反覆強調。</p>
+
+  <h3>5.3b 「發現量大」是否等於「風險高」？——1.3% 的實證答案</h3>
+
+  <p>當 AI 能以數千個為單位產出漏洞時，下一個問題是：這些漏洞真的被利用了？2026 年出現了第三方量化答案，而它給出的是<strong>降溫而非恐慌</strong>的結論。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>來源</th><th>發現量</th><th>實際被利用</th><th>推論</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>VulnCheck</b>（H1 2026）</td>
+          <td>1,061 個 AI 輔助發現的漏洞</td>
+          <td><b>14 個（約 1.3%）</b>確認在野被利用</td>
+          <td>與同期<strong>所有漏洞的整體利用率大致相同</strong>——AI 發現的漏洞並沒有「特別容易被利用」</td>
+        </tr>
+        <tr>
+          <td><b>Anthropic Project Glasswing</b>（被 VulnCheck 引用）</td>
+          <td>報告 <b>23,000+</b> 個發現</td>
+          <td>僅 <b>126 個</b>產生已發布 CVE，<b>1 個</b>被確認在野利用</td>
+          <td>這條漏斗（23,000 → 126 → 1）是「發現量」與「已確認風險」之間落差最具體的證據</td>
+        </tr>
+        <tr>
+          <td><b>Anthropic</b>（2026-02）</td>
+          <td>500+ 個高嚴重性漏洞（皆人工驗證）</td>
+          <td>未報告在野利用</td>
+          <td>該研究的主要貢獻是「能大量發現」，而非「造成大量利用」</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>VulnCheck 研究員 Patrick Garrity 據此認為，目前的漏洞情報顯示前沿 AI 模型的使用<strong>「更可能讓防禦方在強化軟體上取得優勢，而不是讓攻擊方在軟體生產者之前發現漏洞上取得優勢」</strong>。這是對「vulnpocalypse（漏洞末日）」式警告的重要反證。</p>
+
+  <p><strong>但同一份報告也給出了相反方向的警訊：</strong>2026 上半年 CVE 發布到進入 KEV 的中位時間由 2025 年的 <strong>120 天縮短到 80 天</strong>，且 23.43% 的 KEV 在 CVE 發布當天或之前就已出現利用證據。Garrity 的判讀是「早期利用活動並未與 CVE 發布量同步擴張」——也就是<strong>漏洞產出量暴增，但實際利用並未等比例成長</strong>。最受針對的類別為 CMS（163 個 KEV，占三分之一），其次為網路邊緣裝置（68）與作業系統（44）。</p>
+
+  <div class="box ok">
+    <span class="t">對學習者的判斷練習</span>
+    這三個數字放在一起時，最值得練習的是<strong>區分「發現」「通報」「CVE 指派」「實際利用」四個不同階段</strong>。23,000 → 126 的落差主要來自驗證與 CVE 指派流程（也反映過去的誤報爭議）；126 → 1 的落差則說明<strong>「可觸發」與「會被真實攻擊者利用」之間仍隔著可達性、目標價值與攻擊成本的考量</strong>。任何只引用「AI 發現了 N 個漏洞」而不同時說明後續漏斗的報導，都會系統性地誇大風險。
+  </div>
+
+  <h3>5.4 Benchmark 與真實世界的落差</h3>
+  <ul>
+    <li><strong>任務被描述得太好。</strong>CyberGym 的任務會給「位置、類型、root cause」等線索（來自 commit message 改寫）。真實世界沒有這種提示。這是所有 benchmark 共同的結構性落差。</li>
+    <li><strong>「重現」不等於「發現」。</strong>給定描述後能寫出 PoC，與在沒有提示下自行定位，是兩種難度。</li>
+    <li><strong>注入漏洞 vs 真實漏洞。</strong>AIxCC 的 86%（54/63）是針對「刻意注入」的合成漏洞；同一批系統在真實軟體中只找到 18 個未知漏洞（C 6 個、Java 12 個），且<strong>11 個自動修補全部落在 Java，C 程式庫的 0day 未被自動修補</strong>。數量級與修補成功率的雙重落差，說明合成任務與真實任務不可直接類比。</li>
+    <li><strong>「重現」與「修補」也不是同一件事。</strong>SEC-bench 在同一批 SOTA code agent 上量測兩項任務，得到 PoC 生成最高 18.0%、修補最高 34.0% 的落差——修補的成功率反而是 PoC 生成的近兩倍，這與直覺相反，說明「產生可觸發輸入」比「套用正確修補」更難，也說明單一分數無法代表安全工程的全貌。</li>
+    <li><strong>評測成本限制會扭曲排名。</strong>Anthropic 明確指出其 CyberGym 評測中 Opus 4.1 因價格較高而未套用與其他模型相同的「每漏洞 2 美元」成本限制，因此 1 次嘗試的比較基準並不一致。</li>
+    <li><strong>CTF 與真實漏洞的距離。</strong>Cybench 來自 CTF 題目；Anthropic 以 40 題中 37 題的子集評估。CTF 通常有明確 flag 與可解性保證，真實系統沒有。</li>
+  </ul>
+
+  <h3>5.5 成本結構</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>成本項</th><th>已公開的具體數字</th><th>意涵</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>單次嘗試（per task）</td>
+          <td>CyberGym leaderboard 限制為每個漏洞最多 <b>2 美元</b> API 費用</td>
+          <td>單次探索的邊際成本已低到可以規模化，但單次成功率也僅約 30%</td>
+        </tr>
+        <tr>
+          <td>30 次嘗試</td>
+          <td>約 <b>45 美元</b>／任務（Anthropic 數據）</td>
+          <td>成功率的提升是線性堆錢換來的；66.7% 對應的是約 22 倍成本</td>
+        </tr>
+        <tr>
+          <td>Fuzzing 對照組</td>
+          <td>150 CPU-hours 未發現該 bug（Big Sleep 的 SQLite 案例）</td>
+          <td>兩者成本量級不同，不能簡單換算成「哪個便宜」</td>
+        </tr>
+        <tr>
+          <td>單次完整調查（per codebase）</td>
+          <td><b>約 150 美元</b>（Opus，約 1,000 萬 tokens）／<b>約 30 美元</b>（Sonnet）（IronCurtain, 2026-08）</td>
+          <td>作者指出「這個量級決定了防禦者一年能看多少個函式庫」；這比 CyberGym 的每漏洞 2 美元高一個數量級，因為後者是「已知漏洞的重現」而非「開放式調查」</td>
+        </tr>
+        <tr>
+          <td>開放權重模型</td>
+          <td>GLM 5.1 單次平均 <b>2,700 萬 tokens</b>，但因單價低，總成本與 Sonnet 相當</td>
+          <td>迭代次數較多（token 量高），顯示「便宜模型 × 更多輪」可達到相近成本區間</td>
+        </tr>
+        <tr>
+          <td>自動化競賽的預算上限</td>
+          <td>AIxCC 為每隊配置 <b>50,000 美元</b> LLM 額度；若無預算控制，<b>單一 CRS 執行可超過每小時 1,000 美元</b>（OSS-CRS 論文）</td>
+          <td>這是「LLM 預算必須被當成與 CPU／記憶體同等的一級資源」的直接證據；七支 AIxCC 隊伍都各自實作了預算追蹤</td>
+        </tr>
+        <tr>
+          <td>人工 triage</td>
+          <td>無公開統一數字</td>
+          <td>誤報率的每一個百分點，都會轉譯成人類工時</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box warn">
+    <span class="t">成本判斷的實務建議</span>
+    評估是否導入 AI 漏洞挖掘時，不要只看「每個 bug 多少錢」，要看<strong>「每個被人工驗證為真的 bug 需要多少總成本」</strong>（模型 API + 執行沙箱 + 人工 triage 工時 + 誤報處理）。目前公開資料顯示，把 AI 放在<strong>可自動驗證的環節</strong>（harness 生成、crash triage、靜態告警排序）的投報率，明顯高於純粹的「LLM 直接報漏洞」。
+  </div>
+
+  <h3>5.6 其他值得注意的限制</h3>
+  <ul>
+    <li><strong>安全對齊與 AUP 護欄會直接造成防禦者的摩擦。</strong>CyberGym 團隊觀察到 o4-mini 在評測中頻繁尋求使用者確認而非自主行動，因而表現低於預期。更值得注意的個案：IronCurtain 的作者在需要確認漏洞嚴重性、要求模型建構可運作的 exploit 時<strong>被模型拒絕</strong>，他只能手動把流程拆成七個步驟，模型執行前兩步後仍因 AUP 護欄再次拒絕。作者據此指出這是關鍵的<strong>不對稱</strong>——防禦者做正當研究撞到摩擦，而資源充足的攻擊者使用未受管制的開源權重模型則不受此限。這既是技術限制，也是政策問題。</li>
+    <li><strong>專用模型未必能遷移。</strong>在 SWE-bench 表現優異的專用模型，在 CyberGym 上每個都 ≤ 2%；SWE-bench（通用 bug 修復）與漏洞重現是<strong>互補而非重疊</strong>的能力。</li>
+    <li><strong>不完整修補是真實存在的風險。</strong>CyberGym 在 759 個觸發 crash 的 PoC 中，人工確認為 17 個不完整修補，跨 15 個專案。AI 生成 patch 的驗證不能只跑一次。</li>
+    <li><strong>廠商自述的數字需區分層級。</strong>XBOW 的排名與 1,060 個提交來自其自身部落格；應與平台資料、第三方 benchmark 交叉確認。</li>
+    <li><strong>「開源」不等於「可用」。</strong>OSS-CRS 論文實證發現，AIxCC 七支決賽隊伍的 CRS 雖然全部開源，但在半年後仍<strong>幾乎無法在原始團隊之外使用</strong>：所有系統都綁定在賽後已被關閉的 Azure + Kubernetes 環境，且沒有一個提供元件層級的抽取介面。冠軍系統 Atlantis 需 20 台以上 Azure VM 與 42 TiB 儲存。這提醒我們，「成果開源」與「能力可被社群複用」之間存在巨大的工程落差。</li>
+    <li><strong>大規模通報的外部性。</strong>OSS-CRS 論文記錄：curl 因 AI 撰寫的提交淹沒審查者而<strong>關閉 bug bounty 計畫</strong>，其中多為未經確認的 finding；FFmpeg 維護者批評 Google 提交有效 bug 卻未附修補，稱之為「CVE slop」。自動化若不把「驗證與修補」納入流程，會把成本外部化給開源維護者。</li>
+  </ul>
+
+  <a class="toplink" href="#toc">↑ 回目錄</a>
+</section>
+
+<!-- ===================== 6 ===================== -->
+<section id="ch6">
+  <h2 class="ch"><span class="num">CH 06</span>學習路徑（四階段） <span class="en">Learning Path</span></h2>
+
+  <p>本階段設計原則：<strong>每一階段都必須產出「可被驗證的具體東西」</strong>（一個崩潰、一條規則、一份報告、一次負責任揭露），而不是只讀完文章。四階段之間的順序不可顛倒——沒有漏洞原理基礎，AI 只會放大誤報；沒有工具鏈實作能力，無法驗證 AI 的輸出。</p>
+
+  <div class="box note">
+    <span class="t">全程鐵則</span>
+    所有練習只在<strong>自己擁有或明確授權</strong>的環境進行：本機 VM、CTF 平台、公開靶場、允許測試的開源專案。發現真實系統的問題時，走負責任揭露流程（見 CH08）。
+  </div>
+
+  <!-- Stage 1 -->
+  <div class="stage s1">
+    <div class="sh">
+      <span class="st">第一階段：漏洞原理基礎</span>
+      <span class="sd">建議 2–3 個月｜目標：看到程式碼能猜到「哪裡會壞」</span>
+    </div>
+    <div class="sb">
+      <p>這一階段的產出標準是：<strong>能針對一段 100 行以內的 C 程式，指出可能的記憶體安全問題並解釋觸發條件</strong>。</p>
+
+      <h4>必學主題</h4>
+      <ul>
+        <li><strong>CWE 分類體系</strong>：以 MITRE CWE Top 25 為地圖，先掌握記憶體類（CWE-787 out-of-bounds write、CWE-125 out-of-bounds read、CWE-416 use-after-free、CWE-476 NULL pointer dereference、CWE-190 integer overflow）與常見邏輯類（CWE-79 XSS、CWE-89 SQL injection、CWE-22 path traversal、CWE-502 deserialization）。理解 CWE 的價值在於它是<strong>共同的詞彙</strong>——你寫 prompt、寫評測、寫報告都會用到它。</li>
+        <li><strong>記憶體安全（C/C++）</strong>：堆疊與堆積的配置、指標算術、生命週期、buffer 邊界、整數溢位導致的長度計算錯誤。特別注意「sentinel 值」這類語意約定（Big Sleep 的 SQLite bug 正是 <code>iColumn == -1</code> 表示 ROWID 的 sentinel 未被正確處理）。</li>
+        <li><strong>記憶體安全（Rust 與現代語言）</strong>：理解 <code>unsafe</code> 邊界、FFI、以及為何「換語言」不能消除所有漏洞。</li>
+        <li><strong>Web 漏洞</strong>：從 <strong>OWASP Top 10:2025</strong> 出發（<a href="https://top10.owasp.org/2025/">top10.owasp.org/2025</a>），重點在<strong>資料流</strong>：source（使用者輸入）→ 傳遞 → sink（危險操作）。SQL injection 與 XSS 是練習資料流思維的最佳教材。</li>
+        <li><strong>2025 版的三個重點變化（值得優先認識）</strong>：
+          <ul>
+            <li><strong>A03 軟體供應鏈失效</strong>（新類別，社群調查中 50% 受訪者列為第 1，平均發生率最高 5.19%）——範圍從「有已知漏洞的元件」擴大到<strong>整個建置／發佈／更新流程的破壞</strong>；官方列舉 SolarWinds（2019）、Bybit 15 億美元被盜（2025）、Shai-Hulud npm 蠕蟲（2025，首個成功自我傳播的 npm 蠕蟲，波及 500+ 套件版本）。</li>
+            <li><strong>A10 異常條件處理不當</strong>（新類別，24 個 CWE）——涵蓋錯誤處理不當、邏輯錯誤、<strong>failing open</strong>；首要 CWE 即包含 <code>CWE-209</code>（錯誤訊息含敏感資訊）與 <code>CWE-476</code>（NULL 指標解引用）。</li>
+            <li><strong>A05 注入</strong>降至第 5（合併了 XSS）；<strong>A02 安全設定錯誤</strong>升至第 2；<strong>A09</strong> 更名為「Logging and <strong>Alerting</strong> Failures」（強調警報而不只是日誌）。</li>
+          </ul>
+        </li>
+        <li><strong>實作練習的涵蓋缺口與後續補強</strong>：原有靶場充分涵蓋 A05（注入）、A08（反序列化）、A10（CWE-209），但 <strong>A01 存取控制失效與 A10 的核心 CWE（fail-open）原本完全未涵蓋</strong>。
+          <ul>
+            <li><strong>已補強（A01 + A10）</strong>：建立靶場實作 6 個漏洞並經執行驗證 —— V1 <strong>IDOR 水平越權</strong>（CWE-639）、V2 缺省允許（CWE-862）、V3 錯誤訊息洩漏（CWE-209）、V4 資源未釋放（CWE-460）、V5 未檢查回傳值導致<strong>靜默失敗</strong>（CWE-252／CWE-391）、V6 <strong>fail-open 認證</strong>（CWE-636）。驗證結果 <strong>6/6</strong>。</li>
+            <li><strong>已補強（A03）</strong>：自製 OSV API 掃描器，對 8 個刻意選用歷史漏洞版本的套件進行清查 —— <strong>8/8 有漏洞、合計 162 個</strong>（Django 2.2.0 單獨 75 個）。</li>
+            <li><strong>已補強（A09 日誌與警報）</strong>：建立第三個靶場，示範 2025 版更名所強調的重點——「記錄」不等於「通報」。6 個缺口全部經執行驗證（<strong>6/6</strong>）：L1 登入失敗不記錄（CWE-778）、L2 關鍵操作無審計軌跡（CWE-778）、L3 日誌含<strong>明文密碼</strong>（CWE-532，實測日誌出現 <code>password=123456</code>）、L4 暴力破解無告警（CWE-778）、L5 日誌檔可被 API 清除（CWE-732）、L6 無 request_id 無法串連事件（CWE-778）。修補版以<strong>結構化 JSON Lines 日誌 + 告警門檻 + 敏感欄位遮罩 + request_id 貫穿</strong>修正，驗證結果<strong>缺口補上 6/6、功能保留 4/4</strong>。其中一個反諷的設計值得注意：<strong>漏洞版把失敗次數顯示給攻擊者（回應中），卻完全不寫入日誌</strong>——攻擊者知道進度，防禦方零資訊。</li>
+            <li><strong>已補強（A04 加密失效 + A06 不安全的設計，原兩類皆無專門靶場）</strong>：建立電商情境靶場，6 個漏洞全部經執行驗證（<strong>6/6</strong>）。<strong>A06 設計缺陷</strong>：B1 限購可繞過（CWE-799，check-then-act）、B2 <strong>TOCTOU 競態</strong>（CWE-367——餘額 5000 併發扣款 3 筆 4000 元後<strong>變成 −7000</strong>）、B3 價格由客戶端提供（CWE-472，1 元買 100 元商品）。<strong>A04 加密缺陷</strong>：B4 MD5 無 salt（CWE-916）、B5 可預測隨機 token（CWE-338，相同 seed 產生相同 token）、B6 卡號明文儲存（CWE-311）。修補版以<strong>原子操作（單一 UPDATE + WHERE 條件）、資料庫唯一約束、伺服器端定價、PBKDF2 + salt、CSPRNG、加密儲存</strong>修正，驗證結果<strong>攻擊失效 6/6、功能保留 4/4</strong>（B2 從成功 3/3 修正為 1/3）。
+              <strong>關鍵洞察</strong>：A06 的缺陷是<strong>設計層</strong>的——正如官方強調「設計層缺陷無法靠實作修補」，修補方式不是「加檢查」而是<strong>改變設計</strong>（把檢查條件放進動作本身，讓資料庫保證原子性）。這也讓驗證方式出現第三種型態：<strong>競態漏洞必須用並發請求才能觀察</strong>（單次請求永遠看起來正常）。</li>
+            <li><strong>已補強（A02 安全設定錯誤，原為唯一「部分涵蓋」類別）</strong>：建立設定缺陷靶場，6 個問題全部經執行驗證（<strong>6/6</strong>）：C1 <strong>DEBUG 模式洩漏 traceback</strong> 與檔案路徑（CWE-489）、C2 缺少 <strong>6 個安全標頭</strong>（CWE-693）、C3 <strong>CORS 萬用字元 + credentials</strong>（CWE-942）、C4 <strong>預設憑證未變更</strong>（admin/admin、root/root、guest/guest，CWE-1392）、C5 允許危險 HTTP 方法（PUT/DELETE，CWE-749）、C6 設定與密鑰洩漏（AWS key、DB 密碼明文，CWE-200）。修補版驗證結果<strong>攻擊失效 6/6、功能保留 5/5</strong>。
+              <strong>A02 的獨特性質</strong>：漏洞不是「寫錯程式」，而是「<strong>設定沒做好</strong>」——修補版的程式邏輯與漏洞版幾乎相同，差別只在設定。這也產生<strong>第五種驗證型態</strong>：A02 必須讀「<strong>回應標頭 + 允許的方法 + 端點是否存在</strong>」，而不是讀 body。實務意涵：這類檢查幾乎完全可自動化（規則式工具即可），<strong>不需要動用 frontier model</strong>——把 LLM 留給需要語意理解的問題，才是有效的資源配置。</li>
+            <li><strong>涵蓋結論（最終）</strong>：OWASP Top 10:2025 十個類別中，本專案靶場已<strong>全數充分涵蓋（10/10）</strong> —— A01、A02、A03、A04、A05、A06、A07、A08、A09、A10。這是從最初「3 類完全未涵蓋、4 類部分涵蓋」逐步補強的結果：先補 A01/A10（IDOR、fail-open），再補 A07 與垂直越權、A03 的 SBOM 與簽章，接著補 A09（日誌與警報）、A04/A06（加密與設計缺陷），最後補上 A02（安全設定）。</li>
+            <li><strong>後續已全數修復（A07 + 垂直越權 + SBOM）</strong>：建立第二個靶場補上 <strong>A07 認證失效</strong>與 <strong>A01 垂直越權</strong>共 7 個漏洞，全部經執行驗證（<strong>7/7</strong>）—— W1 無 salt 的 MD5（CWE-916，以 <code>md5('123456')</code> 反查確認）、W2 使用者列舉（CWE-204，錯誤訊息不一致）、W3 無速率限制（CWE-307）、W4 <strong>會話固定</strong>（CWE-384）、W5 過期會話仍有效（CWE-613）、W6 登出未真正失效（CWE-613）、W7 <strong>垂直越權提權為 admin</strong>（CWE-269）。</li>
+            <li><strong>供應鏈練習補強</strong>：除依賴掃描外，另實作 <strong>SBOM 生成</strong>（CycloneDX 1.5 JSON，含 purl 標準識別碼）、<strong>SHA-256 雜湊清單</strong>、以及 <strong>HMAC-SHA256 簽章驗證</strong>；並以「篡改 sbom.json 後驗證應失敗」確認偵測能力有效。同時誠實說明邊界：<strong>HMAC 只能做到完整性，做不到來源可信</strong>——真正的供應鏈簽章需非對稱簽章（Sigstore/cosign）與信任鏈。</li>
+            <li><strong>修補驗證</strong>：另建立修補版靶場，以「① 攻擊失效　② 功能保留」雙條件驗證 —— 兩項皆 <strong>6/6 通過</strong>，證明是「真的修好」而非「把功能關掉」。</li>
+            <li><strong>A09 日誌與警報（原為部分涵蓋，現已完整實作）</strong>：建立第三個靶場，示範 2025 版更名所強調的重點——「記錄」不等於「通報」。6 個缺口全部經執行驗證（<strong>6/6</strong>）：L1 登入失敗不記錄（CWE-778）、L2 關鍵操作無審計軌跡（CWE-778）、L3 日誌含<strong>明文密碼</strong>（CWE-532，實測日誌出現 <code>password=123456</code>）、L4 暴力破解無告警（CWE-778）、L5 日誌檔可被 API 清除（CWE-732）、L6 無 request_id 無法串連事件（CWE-778）。修補版以<strong>結構化 JSON Lines 日誌 + 告警門檻 + 敏感欄位遮罩 + request_id 貫穿</strong>修正，驗證結果<strong>缺口補上 6/6、功能保留 4/4</strong>。
+              其中一個反諷的設計值得注意：<strong>漏洞版把失敗次數顯示給攻擊者（回應中），卻完全不寫入日誌</strong>——攻擊者知道進度，防禦方零資訊。</li>
+          </ul>
+        </li>
+        <li><strong>為什麼 IDOR 與 fail-open 特別值得練</strong>：兩者都是<strong>邏輯漏洞</strong>，沒有 crash、沒有 sanitizer 訊號——<strong>fuzzer 幾乎不可能找到</strong>（回應仍是 200）。這正是 CH05「能力邊界」要區分漏洞類型的原因：<strong>可執行驗證的方式必須配合漏洞類型</strong>（IDOR 要比對授權前後的行為差異；fail-open 需製造故障情境才能觀察），而不是等程式崩潰。</li>
+        <li><strong>逆向基礎</strong>：x86-64 組合語言的閱讀能力、stack frame 佈局、呼叫慣例（calling convention）、GOT/PLT 概念。不需要會寫 shellcode，但必須能讀懂 crash 的 stack trace 與 disassembly。</li>
+      </ul>
+
+      <h4>可執行練習</h4>
+      <ol class="checklist">
+        <li><strong>寫 10 個會壞的程式。</strong>自己用 C 寫出：off-by-one 的 <code>strcpy</code>、釋放後使用、整數溢位造成的 <code>malloc</code> 尺寸錯誤、格式字串漏洞、負索引寫入陣列。編譯時開 <code>-fsanitize=address,undefined</code>，觀察 sanitizer 的輸出格式。這一步的目的是把「CWE 編號」和「實際崩潰訊息」對應起來。</li>
+        <li><strong>CWE Top 25 對照練習。</strong>針對前 10 項，各找一個公開的修補 commit（GitHub 上搜尋 CVE 編號），讀 diff，寫下 3 句話：問題是什麼、怎麼觸發、怎麼修。</li>
+        <li><strong>WebGoat / DVWA 基礎關卡。</strong>不用工具，純手工完成 SQL injection 與 XSS 各 3 關，並用瀏覽器開發者工具的 Network 面板記錄每一條請求。目的是建立「輸入 → 輸出」的可觀察性。</li>
+        <li><strong>IDOR 水平越權（A01 / CWE-639）。</strong>自己做一個有兩個使用者的服務，用 <code>?uid=</code> 模擬登入身分，然後嘗試用 alice 的身分讀取 bob 的文件。重點體會：<strong>這類漏洞沒有 crash、沒有錯誤訊息——只有「不該回 200 的請求回了 200」</strong>。修補時注意「無權存取」應與「資源不存在」回<strong>同一個</strong> 404，否則會洩漏資源存在性。</li>
+        <li><strong>fail-open 認證（A10 / CWE-636）。</strong>寫一個權限檢查函式，讓它在「資料來源故障」時回傳 True，然後觀察未授權者如何因此放行。修補成 fail closed（例外時拒絕並回 503）。這個練習比 SQLi 更能訓練<strong>邏輯漏洞思維</strong>：漏洞不在語法，而在「例外處理的方向錯了」。</li>
+        <li><strong>依賴掃描（A03）。</strong>用 <code>pip-audit</code> 或 OSV API 掃描自己專案的依賴，找出版本落後且已有 CVE 的套件。體會「自己的專案也是供應鏈的一環」——你沒直接引入的套件，也可能透過間接依賴進入。</li>
+        <li><strong>日誌與警報（A09）。</strong>設計一個登入端點，先<strong>刻意不寫任何日誌</strong>，然後連續失敗 10 次——觀察「攻擊者有進度資訊，防禦方零資訊」的反諷。接著修補成 <strong>結構化 JSON 日誌 + 告警門檻 + 敏感欄位遮罩 + request_id 貫穿</strong>。驗證時注意：<strong>A09 的漏洞不在回應裡，而在日誌與告警檔案中</strong>——這是它與注入類漏洞在驗證方式上的根本差異。</li>
+        <li><strong>加密與設計缺陷（A04 / A06）。</strong>做一個電商情境：先實作 <code>check-then-act</code> 的扣款邏輯，用<strong>併發請求</strong>把餘額扣成負數；再實作「客戶端提供價格」的信任邊界錯誤。修補時體會 A06 的核心——<strong>設計缺陷無法靠實作修補</strong>：要把檢查條件放進動作本身（單一原子 <code>UPDATE ... WHERE balance &gt;= ?</code>），而不是「先檢查再動作」。密碼儲存改用 PBKDF2/Argon2 並加 salt，隨機 token 改用 <code>secrets</code>。</li>
+        <li><strong>安全設定排查（A02）。</strong>拿一份現成的 HTTP 服務，用下列清單逐項檢查：<strong>回應標頭</strong>（CSP、X-Content-Type-Options、HSTS 等 6 項）、<strong>允許的 HTTP 方法</strong>（送 PUT/DELETE 看是否被拒）、<strong>預設憑證</strong>（admin/admin 等常見組合）、<strong>偵錯端點</strong>（<code>/env</code>、<code>/debug</code>、<code>/actuator</code>）、<strong>錯誤訊息</strong>（是否洩漏 traceback 或區分帳號存在性）。重點體會：<strong>A02 的漏洞不在 body，而在標頭與伺服器行為</strong>——這是第五種驗證型態。同時注意這類檢查<strong>幾乎完全可自動化</strong>，不需要 LLM。</li>
+        <li><strong>供應鏈深度：依賴樹、非對稱簽章與 CI（A03）。</strong>（1）<strong>間接依賴樹</strong>：用 <code>pip-audit</code> 或自製工具展開整棵依賴樹——體會「你的 requirements.txt 只有 8 行，但實際依賴樹有 17 個節點」，而 Log4Shell 正是從沒被直接引入的那一層進來的。（2）<strong>非對稱簽章</strong>：比較 HMAC 與 RSA/Ed25519 的差異——<strong>HMAC 的驗證者持有密鑰所以也能偽造，無法證明「來源」；非對稱簽章用公鑰驗證，才能真正建立信任鏈</strong>（根 CA → 發佈者憑證 → 產物簽章）。（3）<strong>CI 整合</strong>：把上述檢查寫進 CI（含<strong>每週排程重掃</strong>，因為「今天安全」不代表「明天安全」），並把相依性檔案的變更視為<strong>需要人工審查的事件</strong>。</li>
+        <li><strong>真實案例實測：CVE-2020-1747（PyYAML 反序列化 RCE，CVSS CRITICAL）</strong>——從本專案掃描出的 166 個漏洞中挑選一個，<strong>實際下載官方原始碼並在本地複現</strong>。測試 4 個版本（5.1／5.2／5.3／5.3.1）× 多種攻擊向量，載荷僅為無害的 <code>echo</code>。結果：<code>python/object/new</code> 在 5.2／5.3 可執行任意程式碼；5.3.1 新增的 <strong>state 鍵黑名單</strong>（<code>['^extend$', '^__.*__$']</code>）成功攔下 <code>__reduce__</code>——錯誤訊息為 <code>blacklisted key '__reduce__' in instance state found</code>，是修補生效的直接證據。而 <code>safe_load()</code> 從頭到尾都正確攔阻。
+          <br><strong>三個關鍵教學點</strong>：（1）問題<strong>不是函式庫有缺陷，而是開發者選錯了 API</strong>——同一個套件，<code>safe_load</code> 安全、<code>full_load</code> 危險；（2）CVE 的「修復版本」欄位要理解為「<strong>這個具體向量</strong>被修補」，不是「這個 API 從此安全」（實測 5.3.1 仍可用 <code>object/new</code> 建立行程物件）；（3）下載舊套件複現要注意舊版 PyYAML 有 <code>lib/</code>（Python 2）與 <strong><code>lib3/</code>（Python 3）</strong>兩份原始碼，用錯目錄會全部匯入失敗。</li>
+        <li><strong>前端邏輯與 JS 分析（已補強：FrontendLab + HTTP fuzzer）。</strong>真實系統的<strong>業務邏輯寫在前端</strong>：隱藏欄位、未公開的 API 端點、參數組合規則、甚至前端硬編碼的加解密金鑰——<strong>不讀 JS，就只看得見表層</strong>。已建立前端靶場，把「可觀察性」當成主題，六類線索全部藏在 <code>/static/app.js</code>：J1 <strong>JS 註解洩漏內部 API 路徑</strong>（CWE-540）、J2 <strong>前端硬編碼加密金鑰</strong>（CWE-321）、J3 隱藏參數（CWE-472）、J4 未授權隱藏 API（CWE-862）、J5 前端加密可被逆向（CWE-602）、J6 原始碼洩漏測試環境（CWE-489）。驗證腳本<strong>不讀後端原始碼</strong>，完全模擬攻擊者的資訊收集流程：取得 app.js → 靜態分析（實測找到 4 條洩漏路徑、硬編碼金鑰、環境資訊）→ 用線索實際呼叫 API，結果 <strong>5/5 全部驗證</strong>。
+          <br>同時補上 <strong>HTTP 層工具鏈</strong>：自製黑箱 HTTP fuzzer（端點探索／參數 fuzzing／方法探測）。實測在靶場上發現 <strong>5 個端點（含 2 個隱藏端點）與 1 個隱藏參數</strong>。這也帶出<strong>兩類 fuzzing 的根本差異</strong>：本專案的 <code>fuzz_v2</code> 是<strong>白箱 + 覆蓋率 + crash 訊號</strong>（14 萬 exec/s、誤判率極低）；HTTP fuzzer 是<strong>黑箱</strong>，只能用「狀態碼 + 長度 + 內容」比對（每秒數十請求、<strong>誤判率高</strong>）。<strong>這正說明了為什麼白箱遠比黑箱可靠</strong>——即使 CH03 引用 Big Sleep 批評「覆蓋率不是可靠引導訊號」，那仍是在白箱前提下；黑箱的訊號品質更差。<strong>核心結論：前端提供假設，fuzzing 負責驗證</strong>，兩者必須合併使用。</li>
+        <li><strong>補足注入類的三大缺口：XSS / CSRF / XXE（已完成）。</strong>本專案的 A05 覆蓋原本只有 SQL injection 與 command injection（**伺服器端**）；現已建立靶場補上**客戶端與解析器層**，<strong>5/5 全部驗證</strong>：反射型 XSS、<strong>存儲型 XSS（含持久化驗證）</strong>、DOM 型 XSS、CSRF（無 token／無 Origin 檢查／無 SameSite）、<strong>XXE</strong>（實測成功展開外部實體讀取本機檔案，安全對照 <code>resolve_entities=False</code> 正確阻擋）。
+          <br><strong>本靶場的核心教學點是「五種驗證方式各不相同」</strong>：反射型看<strong>回應是否含未轉義標籤</strong>；存儲型必須<strong>再查詢一次</strong>確認 payload 被持久化（這也是它比反射型嚴重的原因——不需誘導點擊）；CSRF 看的是「<strong>缺少的防護</strong>」而非「注入的內容」；DOM 型的 payload <strong>永遠不會送到伺服器</strong>（只存在 URL fragment），所以伺服器日誌完全看不到，需執行前端 JS 才能 100% 確認。
+          <br><strong>XXE 的實測發現值得記錄</strong>：標準庫 <code>xml.etree.ElementTree</code> <strong>預設就會拒絕外部實體</strong>（天生沒有 XXE）——所以 XXE 不是「隨便用 XML 就有」，而是來自 ① 第三方解析器開啟危險選項（如 lxml 的 <code>resolve_entities=True</code>）② 舊版解析器 ③ 開發者為支援 DTD 而主動關閉防護。<strong>是解析器的設定決定了有沒有 XXE</strong>。
+          <br>同時補上<strong>認證後 fuzzing</strong>：HTTP fuzzer 現支援 <code>--cookie</code> 與 <code>--header</code>——因為真實目標的漏洞常位在<strong>登入之後</strong>，未認證的掃描只看得到登入頁。</li>
+        <li><strong>SSRF（伺服器端請求偽造，CWE-918）——課程最大模組，原為完全缺口。</strong>對照 Bilibili 84 集課程後發現，課程用 <strong>10 集</strong>講 SSRF，是本專案完全沒有的類別；在雲環境下它是<strong>首要風險</strong>，因為可讀取雲端 metadata（<code>169.254.169.254</code>）取得<strong>臨時憑證</strong>，等同接管雲端角色。已建立<strong>雙埠靶場</strong>（主應用 + 內部服務，全部在本機），驗證 <strong>6/6 通過</strong>：S1 直接存取內網服務、S2 <strong>白名單邏輯可被繞過</strong>、S3 <strong>302 重導向繞過驗證</strong>、S4 <strong>讀取雲端 metadata 憑證</strong>（本機假端點）、S5 內部服務無認證（橫向移動），以及<strong>安全對照</strong> <code>/fetch-safe</code> 正確阻擋（403）。
+          <br><strong>實測的誠實發現</strong>：帶 userinfo（<code>user@host</code>）的 URL 在 <strong>Python 標準庫 urllib</strong> 上會導致 <code>RemoteDisconnected</code>——這是標準庫的實作限制，不是漏洞不存在（真實世界用 curl/requests/瀏覽器時 <code>@</code> 手法確實有效）。因此 S2 改以<strong>靜態分析白名單邏輯 + 變體測試</strong>驗證：<code>userinfo@</code> 變體同時滿足「通過白名單」與「實際連到內網」。<strong>把驗證限制揭露出來，比假裝攻擊成功更誠實。</strong>
+          <br>SSRF 也帶來<strong>第七種驗證型態</strong>：不看回應格式（XSS）、不看防護機制（CSRF），而是看<strong>「伺服器願不願意替你連到不該連的地方」</strong>。</li>
+        <li><strong>補全對照 Bilibili 84 集課程後發現的 7 類缺口（已完成，7/7 通過）。</strong>課程共 21 個模組，對照後發現本專案有 13 個完全未涵蓋；現已補上其中可實作的 7 類：<strong>U 文件上傳</strong>（CWE-434）、<strong>O CORS 配置錯誤</strong>（含內網探測，CWE-942）、<strong>T SSTI 服務端模板注入</strong>（CWE-1336）、<strong>Cr CRLF 標頭注入</strong>（CWE-113）、<strong>R 開放重導向</strong>（CWE-601）、<strong>J JSONP 劫持</strong>（CWE-346）、<strong>A 未授權訪問</strong>（CWE-862）。本專案累積的<strong>驗證型態已達 14 種以上</strong>——每種漏洞的驗證方式都不相同，這是 CH02.1「驗證方式必須配合漏洞類型」最完整的實證。
+          <br><strong>★ 這次實測推翻了我自己的假設</strong>：我原本以為「大小寫可繞過上傳黑名單」，但實測 <code>shell.pHp</code> 仍被 403 攔阻——因為靶場黑名單用了 <code>fname.lower().endswith()</code>，<strong>有正規化的實作下大小寫根本無效</strong>。真正的結構性問題是<strong>黑名單本身不完整</strong>：實測 <strong>8 種變體</strong>（<code>.php5</code>／<code>.phtml</code>／<code>.phar</code>／<code>.php.jpg</code>／<code>.pht</code>／<code>.shtml</code>／<code>.jspx</code>／<code>.asp;.jpg</code>）全部繞過成功。<strong>「大小寫繞過」是常見的教學說法，但只在黑名單未做正規化時有效</strong>——而黑名單永遠列不完可執行副檔名，這就是為什麼必須用<strong>白名單</strong>。
+          <br>SSTI 的驗證也值得一提：判定邏輯不是看「有沒有報錯」，而是看<strong>「模板表達式是否真的被求值」</strong>（<code>{{7*7}}</code> → <code>49</code>）。本靶場刻意只做無害運算，<strong>不示範 RCE 載荷</strong>。</li>
+        <li><strong>帳號接管全鏈 + 短信轟炸 + XSS 盲打（原本判定「需外部服務」，實際皆可完整實作，9/9 通過）。</strong>關鍵在於<strong>自己補上缺失的服務</strong>：自建模擬 SMS 閘道（連接埠 8941）與 XSS callback 接收端（8942），一次啟動三個服務。<strong>帳號接管 6 項</strong>：A1 使用者列舉（CWE-204）、A2 <strong>密碼重置 token 可預測</strong>（CWE-330/640）、A3 token 可重放（CWE-613）、A4 <strong>改密碼後舊 session 仍有效</strong>（CWE-613）、A5 改密碼免舊密碼（CWE-620）、A6 <strong>Host 標頭注入</strong>（CWE-640，重置連結被導向攻擊者網域）。<strong>短信 2 項</strong>：B1 短信轟炸（CWE-799，連續 6 次全部 200，安全對照 429）、B2 驗證碼可爆破（CWE-307，8 次錯誤全無鎖定）。<strong>盲打 1 項</strong>：X1 存儲型 XSS + callback 接收（CWE-79）。
+          <br><strong>兩個最有價值的驗證方式</strong>：（1）A2 的判定<strong>不是看程式碼註解，而是證明攻擊者真的能預測</strong>——自行計算 <code>md5(username+timestamp)</code>、比對相符、用算出的 token <strong>實際重置密碼並用新密碼登入成功</strong>，全程不需收到任何信件；（2）X1 盲打的判定<strong>需要接收端</strong>——模擬瀏覽器執行載荷並確認 callback <strong>真的到達</strong>盲打平台，這是盲打與一般 XSS 驗證的關鍵差異（也是課程用 2 集講「自建盲打平台」的原因）。
+          <br><strong>國外開源資源實測（VPN 後 9/10 可達）</strong>：<strong>vulhub</strong>（Docker 漏洞靶場）、<strong>CloudGoat</strong>／<strong>AWSGoat</strong>（雲安全靶場）、Juice Shop、DVWA、Spring 安全公告、<strong>NVD API</strong>、Maven Central、SecLists 皆可達。已<strong>實際下載</strong> vulhub 的 Spring4Shell（CVE-2022-22965）配置與 NVD 官方資料（<strong>CVSS 9.8</strong>）。剩餘兩個缺口為環境限制而非能力缺口：<strong>框架漏洞</strong>需 Docker（本機無，但已取得真實配置與 CVE 資料）、<strong>雲安全</strong>需雲帳號（核心機制已由 <code>ssrflab</code> 模擬）。
+          <br><strong>最重要的收穫</strong>：原本判定「需外部服務」的三項，實際上有兩項<strong>只要自己實作缺失的服務就能完整做</strong>——「缺少外部服務」往往不是真正的阻礙，而是「願不願意自己實作那個服務」。</li>
+        <li><strong>真實外部平台實戰：OverTheWire Natas（實際解出 5 關）。</strong>原本要求操作 TryHackMe，但實測發現其<strong>房間列表 API 回傳 401（需登入）</strong>、需註冊帳號 + email 驗證、實際操作還需啟動 AttackBox 或下載 OpenVPN 設定，且平台有<strong>反爬蟲機制（連續請求遇 429 Too Many Requests）</strong>——技術與授權上皆不可行。
+          <br>因此改用<strong>完全免費、無需註冊、明確公開授權</strong>的 <strong>OverTheWire Natas</strong>（純 HTTP 即可操作），並<strong>實際解出 natas0 → natas5</strong>：natas0 檢視頁面原始碼（HTML 註解）、natas1 <strong>客戶端 JS 禁用右鍵無效</strong>、natas2 目錄列表洩漏 <code>/files/users.txt</code>、natas3 <strong>robots.txt 洩漏路徑</strong>（需<strong>兩步</strong>：先讀 <code>Disallow: /s3cr3t/</code> 再存取該路徑）、natas4 <strong>偽造 Referer 標頭</strong>（證明「檢查 Referer」不是有效控制）。
+          <br><strong>與本專案靶場高度對應</strong>：natas0 ↔ <code>frontendlab</code>（原始碼洩漏）、natas1 ↔ <code>configlab</code>（前端隱藏 ≠ 安全）、natas2 ↔ <code>configlab</code>（Directory Listing）、natas3 ↔ <code>webvulnlab</code>（未授權訪問）、natas4 ↔ <code>webvulnlab</code>（可偽造的檢查）。<strong>核心觀念完全一致</strong>——這 5 關的共同點是「<strong>資訊不小心被留在客戶端可及的地方</strong>」。
+          <br>開發腳本時也踩到真實障礙：初版對 natas3 直接讀 robots.txt 找密碼（但<strong>裡面只有路徑、沒有密碼</strong>），修正為兩步法後才完整通過；且<strong>關卡是串連的</strong>，前一關失敗會導致後面全部 401。<strong>「無法操作」往往有替代方案——找到可行路徑，比堅持原本的方案更重要。</strong></li>
+        <li><strong>Natas 續解：natas5 → natas14（10 關，累計 15 關）。</strong>本次實際解出 <strong>natas5–natas13</strong> 並取得 natas14 密碼，涵蓋九種不同漏洞：natas5 <strong>Cookie 篡改</strong>（<code>loggedin=1</code>）、natas6 原始碼 include 洩漏（<code>/includes/secret.inc</code>）、natas7 <strong>LFI</strong>（<code>?page=/etc/natas_webpass/natas8</code>）、natas8 <strong>編碼逆向</strong>（<code>bin2hex(strrev(base64_encode()))</code> 逆向並以重編碼驗證相符）、natas9 <strong>命令注入</strong>（<code>; cat ...</code>）、natas10 <strong>過濾繞過</strong>（過濾 <code>; | &amp;</code> → 換行注入）、natas11 <strong>XOR 加密 cookie 逆向</strong>（known-plaintext 推導金鑰 <code>kBSw</code>，偽造 <code>showpassword=yes</code> 通過）、natas12 <strong>文件上傳</strong>（<code>filename</code> 欄位可控 → 上傳 PHP shell）、natas13 <strong>magic bytes 繞過</strong>（<code>GIF89a;</code> + PHP 騙過 <code>exif_imagetype</code>）。
+          <br><strong>三個關鍵學習</strong>：（1）<strong>黑名單永遠不完整</strong>——natas10 過濾 <code>; | &amp;</code> 卻能用換行繞過，與本專案「文件上傳黑名單不完整」同理；（2）<strong>自製編碼 ≠ 加密</strong>——natas8 演算法公開可直接逆向、natas11 金鑰固定且明文可預測，可用 known-plaintext 反推金鑰，<strong>XOR 只是混淆不是加密</strong>；（3）<strong>文件上傳防護必須多層</strong>——natas12 只改副檔名就繞過，natas13 加上 magic bytes 檢查仍被 <code>GIF89a;</code> 繞過，真正防護需「白名單 + 內容驗證 + 重新命名 + 不可執行目錄 + 圖片重新編碼」。
+          <br><strong>發現本專案兩個新缺口</strong>：<strong>LFI</strong>（本專案有 SSRF 但無 LFI 靶場）與 <strong>XOR／known-plaintext 加密學攻擊</strong>（本專案有弱隨機但無此類）。這兩個缺口已記錄，可作為後續補強方向。</li>
+        <li><strong>補強完成：LFI 與 XOR/known-plaintext（新增兩個靶場，11/11 通過）。</strong>針對 Natas 實戰發現的兩個缺口，建立了專屬靶場並全部驗證通過。
+          <br><strong>① LFI（<code>lfllab</code>，5/5）</strong>：L1 <strong>基本路徑穿越</strong>（<code>?page=../secrets/config.txt</code>，CWE-22/98）、L2 <strong>過濾繞過</strong>（<code>?page=....//secrets/config.txt</code>——字串 replace 把 <code>....//</code> 還原成 <code>../</code>）、L3 <strong>絕對路徑</strong>（<code>?page=/secrets/config.txt</code>）、L4 <strong><code>php://filter</code> 讀原始碼</strong>，以及安全對照 <code>/safe</code>（<strong>basename + 白名單 + realpath 三層防護</strong>）。
+          <br><strong>② XOR/known-plaintext（<code>cryptolab</code>，6/6）</strong>：X1 <strong>固定 XOR 金鑰</strong>——用已知明文 <code>{"user":"guest",...}</code> XOR 密文，<strong>推出金鑰 <code>kBSw</code> 並偽造 admin cookie</strong>（CWE-327/330，即 natas11 的手法）；X2 <strong>XOR 金鑰重用</strong>——兩段密文相 XOR 可消掉金鑰（CWE-323）；X3 <strong>可預測 token</strong>（時間戳 + 僅 1000 種隨機，CWE-330）；X4 <strong>加密但無完整性驗證</strong>——篡改密文後伺服器仍接受（CWE-353，bit-flipping）。安全對照用 <strong>HMAC-SHA256 簽章</strong>（篡改 → 403）與 <strong>CSPRNG token</strong>（256-bit 熵）。
+          <br><strong>兩個開發時踩到的坑</strong>：（1）LFI 第一版把「完全無過濾」與「有過濾可繞過」混在同端點，導致 L1 也被擋 → 拆成 <code>/page</code> 與 <code>/page-filtered</code>；（2）<strong><code>....//</code> 的層數必須精確</strong>——單層 <code>....//secrets/</code> 才會還原成 <code>../secrets/</code>，兩層會變成 <code>../../</code> 而<strong>跑出基準目錄</strong>。這恰好證明「用字串 replace 做安全過濾」本質上不可靠。
+          <br><strong>驗證型態增至 19 種</strong>：LFI = <strong>看回應是否含「只有目標檔案才有的內容」</strong>；加密學攻擊 = <strong>自己推出金鑰並偽造有效密文</strong>（不是看錯誤訊息）。</li>
+        <li><strong>Natas 續解：natas14 → natas19（6 關），累計 21 關。</strong>本次完成 <strong>SQL 注入</strong>（natas14：<code>" OR 1=1 #</code>）、<strong>SQL 布林盲注</strong>（natas15：二分搜尋 ASCII 破解 32 字元）、<strong>命令注入盲注</strong>（natas16：過濾 <code>; | &amp; \` \ ' "</code>，用 <code>$()</code> + 無引號 grep 正則打造 oracle——空 pattern 匹配 460,819 行 vs 非空匹配較短）、<strong>time-based 盲注</strong>（natas17：所有回應被註解掉，只能用 <code>IF(...,SLEEP(1),0)</code> 的回應時間判斷）、<strong>Session 預測</strong>（natas18：掃描 PHPSESSID 1..640 找到 <code>119</code>；natas19：<code>hex("&lt;n&gt;-admin")</code> 找到 <code>281-admin</code>）。
+          <br><strong>★ 本次最重要的教訓：盲注會解錯，必須驗證。</strong>natas17 第一次解出的密碼是錯的（登入回 401）。我用 <code>LIKE</code> 前綴比對定位到<strong>第 6 字元解錯</strong>（<code>fDGn2D%</code> 失敗、<code>fDGn2%</code> 成功），改用「每題測 3 次取多數」並<strong>每解一個字元就立即用前綴驗證</strong>，最終得到正確密碼並通過完整字串比對。錯誤原因：SLEEP 判斷在網路波動下不穩（0.92s 基準 vs 1.95s SLEEP，1.5s 閾值邊界太窄）。<strong>不能因為「跑完了」就假設正確——要用獨立方法確認。</strong>
+          <br><strong>四個「盲」的層次</strong>（本專案看過最完整的盲注難度階梯）：natas14 有明確回應（★）→ natas15 True/False 文字差異（★★）→ natas16 <strong>輸出長度差異</strong>（★★★★）→ natas17 <strong>只有回應時間</strong>（★★★★★）。<strong>新發現的兩個缺口</strong>：SQL 布林盲注（natas15）與 time-based 盲注（natas17）——本專案目前只有「有回饋」的注入靶場，缺「無回饋」情境。</li>
+        <li><strong>補強完成：「無回饋」情境的資訊洩漏（<code>blindlab</code>，4/4 通過）。</strong>針對 natas15/17 發現的缺口，建立了盲注專屬靶場，並<strong>完整洩漏機密</strong> <code>FLAG{blind_sqli_leaked_secret_2026}</code>（兩種盲注各自獨立洩漏）。
+          <br><strong>B1 SQL 布林盲注</strong>：回應只有「This user exists / doesn't exist」——<strong>從來不輸出任何資料</strong>，但用 <code>admin' AND unicode(substr(password,N,1))&gt;M --</code> 二分搜尋 ASCII，<strong>逐字元還原完整機密</strong>（每個字元約 6 次請求）。
+          <br><strong>B2 time-based 盲注</strong>：回應<strong>完全沒有文字差異</strong>（連 exists 都不顯示），唯一訊號是回應時間（<code>CASE WHEN (...) THEN sleep(1) ELSE 0 END</code>，正常 0.00s vs sleep 1.00s）。這是<strong>最難偵測</strong>的注入類型——WAF 和日誌幾乎看不出異常。
+          <br><strong>B3 錯誤訊息洩漏</strong>：回傳 <code>Query: SELECT * FROM users WHERE username='x''</code> + <code>Error: unrecognized token</code>，洩漏表名 <code>users</code> 與欄位 <code>username</code>（CWE-209）。
+          <br><strong>B4 安全對照：參數化查詢</strong>（<code>WHERE username=?</code>）——兩個注入 payload 都完全無效，正常查詢仍可用。<strong>同一支程式的邏輯，換成參數化查詢就完全無法注入</strong>，這是最根本的防護。
+          <br><strong>開發時踩到的坑</strong>：（1）SQLite 的 <code>unicode('')</code> 回傳 <strong>NULL 而非 0</strong>，導致終止條件失效（原本會多解出尾隨空格）→ 改用 <code>LENGTH(password)&gt;=pos</code>；（2）SQLite 沒有 <code>sleep</code> → 用 <code>conn.create_function</code> 註冊；（3）B3 只顯示 exception 字串不足以證明洩漏結構 → 同時顯示 <code>Query:</code> 與 <code>Error:</code>。
+          <br><strong>四種回饋程度的完整階梯</strong>：B3 直接讀（★）→ B1 是非題（★★★）→ B2 <strong>什麼都沒有，只有時間</strong>（★★★★★）→ /safe 無法注入。<strong>核心洞察：沒有回饋 ≠ 沒有漏洞；時間也是一種輸出。</strong></li>
+        <li><strong>盲注速率提升（實測 7.0×–12.4×）。</strong>針對「解到 natas20 效率慢」的問題，做了效能基準實驗（本機靶場 + 模擬 0.3 秒 RTT）。<strong>瓶頸有三</strong>：① 序列請求（100% 時間在等上一個回應）② SLEEP 太長（time-based 每次固定睡 1 秒）③ 無連線重用。<strong>實測結果</strong>：布林盲注 <strong>83.0 秒 → 11.9 秒（7.0×）</strong>；時間盲注 <strong>199.5 秒 → 16.1 秒（12.4×）</strong>，且<strong>四種方法洩漏結果完全一致</strong>。
+          <br><strong>加速來源拆解</strong>：① <strong>並發（最大效益）</strong>——盲注的每個字元位置<strong>互相獨立</strong>，可同時解，8 threads ≈ 7×（接近理論上限）；② <strong>縮短 SLEEP</strong>——時間盲注專屬，1.0→0.3 秒再多 3.3×（但需先<strong>校準基準時間</strong>並多次測量，SLEEP 太小會被網路抖動誤判，這正是 natas17 第一次解錯的原因）；③ <strong>連線重用</strong>（keep-alive，約 10–20%）。
+          <br><strong>另一個關鍵觀念：能讀就別猜。</strong>先探測回饋程度再選手法——錯誤訊息洩漏可直接讀（1 次請求），布林盲注需 ~200 次，時間盲注需 ~200 次 × 1 秒。<strong>先探測，再選最便宜的手法。</strong>
+          <br><strong>還有一個我自己造成的開銷</strong>：natas17 做過三次驗證（首次盲注 324 秒 + LIKE 定位 ~60 秒 + 重解 ~300 秒）。驗證是必要的（第一次確實解錯），但可以更聰明——<strong>每解一個字元就立即用前綴驗證</strong>，而非整輪重跑。<strong>加速不等於省驗證：快，但必須確認正確。</strong></li>
+        <li><strong>Natas 續解：natas20 → natas27（8 關），累計 28 關。</strong>本次完成八種不同類型的漏洞：natas20 <strong>Session 換行注入</strong>（自訂 handler 檔案格式 `key value\n`，`name=x%0aadmin%201` 注入新變數，debug 確認 `Read [admin 1]`）、natas21 <strong>Session 注入（colocated）</strong>（實驗站把任何 REQUEST 寫入 session，同 session id 進主站即 admin）、natas22 <strong>重定向繞過</strong>（`header("Location: /")` 後<strong>沒有 exit()</strong>，不跟隨重定向即可讀）、natas23 <strong>弱比較</strong>（`11iloveyou`——含 iloveyou 且字串轉數字 `11 > 10`）、natas24 <strong>strcmp 陣列繞過</strong>（`passwd[]=x` → strcmp 回傳 NULL → `!NULL`=True）、natas25 <strong>Log Poisoning + LFI</strong>（UA 注入 PHP → `....//` 繞過過濾 → 讀 log 執行）、natas26 <strong>PHP 反序列化</strong>（`Logger.__destruct()` 寫 webshell，private 屬性用 `\x00Logger\x00prop` 格式）、natas27 <strong>SQL 截斷 + trim 差異</strong>（65 字元註冊截斷成 64、用 64 字元登入匹配自己插入的記錄、`dumpData` 的 `trim()` 卻查詢 8 字元的原始記錄 → 印出真實密碼 `Hy5wZLfVml7jnGmuvfbilRTUUkk29Dv3`）。
+          <br><strong>三種「不一致」造成的漏洞</strong>：natas23 <strong>型別</strong>（字串 vs 數字弱比較）、natas24 <strong>型別</strong>（array vs string）、natas27 <strong>正規化</strong>（`substr` 截斷 vs `trim` vs 原樣）——<strong>同一個輸入在不同函式中被不同地正規化，「你驗證的」和「你查詢的」就不是同一個東西</strong>，這是邏輯漏洞的典型，與注入類不同。
+          <br><strong>三種「寫入端」攻擊</strong>：natas20/21 <strong>session 檔案/資料</strong>、natas25 <strong>日誌檔</strong>（Log Poisoning）、natas26 <strong>webshell</strong>（反序列化）。<strong>新發現四個缺口</strong>：弱比較/型別混淆、Log Poisoning、PHP 反序列化、SQL 截斷+正規化不一致。</li>
+        <li><strong>補強完成：四類 PHP 特有漏洞（<code>phplab</code>，真實 PHP 8.3.35，6/6 通過）。</strong>這四類都是 PHP 語言特有行為，用 Python 模擬會失真，因此<strong>下載並安裝了真實 PHP 8.3.35</strong>（windows.php.net，32.3 MB，NTS 版可直接執行）。靶場涵蓋六個端點：<strong>P1 弱比較</strong>（<code>11iloveyou</code>：字串轉數字 11 &gt; 10）、<strong>P2 strcmp 陣列繞過</strong>（<code>passwd[]=x</code> → 回傳 NULL → <code>!NULL</code>=True）、<strong>P3 in_array 型別混淆</strong>、<strong>P4 PHP 反序列化</strong>（<code>Logger.__destruct()</code> 把 <code>exitMsg</code> 寫入任意檔案，實測 webshell 成功寫入）、<strong>P5 Log Poisoning + LFI</strong>（UA 注入 PHP → <code>....//</code> 繞過 → include 執行，實測 <code>P5_LOG_POISONED</code>）、<strong>P6 SQL 截斷 + 正規化不一致</strong>（註冊 65 字元截斷成 64、用 64 字元登入匹配自己的記錄、<code>dumpData</code> 的 <code>trim()</code> 卻查詢 5 字元的原始記錄 → <strong>洩漏 <code>FLAG{sql_truncation_secret_2026}</code></strong>）。
+          <br><strong>★ 最重要的發現：PHP 7 vs PHP 8 的版本差異。</strong>實測 PHP 8.3.35：<code>"11iloveyou" &gt; 10</code> <strong>仍為 True</strong>（natas23 有效）；<code>"1e2" == "100"</code> <strong>仍為 True</strong>；<code>"abc" == 0</code> <strong>已修復為 False</strong>；<code>strcmp(array)</code> <strong>拋出 TypeError</strong>（已修復）；<code>in_array(0, ["admin"])</code> <strong>已修復為 False</strong>。靶場的 P2 用 <code>null</code> <strong>明確模擬 PHP 7 行為</strong>並在驗證中標註差異——<strong>不假裝 PHP 8 仍有該漏洞</strong>。對滲透測試的意義：<strong>必須確認目標的 PHP 版本，同樣 payload 在 PHP 7 有效、PHP 8 無效</strong>。
+          <br><strong>四類漏洞的核心本質</strong>：型別混淆（同一個值在不同型別下比較結果不同）、反序列化（<strong>資料被當成程式碼</strong>）、日誌注入（<strong>程式碼被寫進資料存放處再被 include</strong>）、正規化不一致（<strong>「你驗證的」≠「你查詢的」</strong>）。
+          <br><strong>開發時踩到的坑</strong>：PHP 的 PDO SQLite 驅動未載入（<code>could not find driver</code>）→ 建立 <code>php.ini</code> 啟用 <code>extension=pdo_sqlite</code>；PHP 8 的 <code>strcmp(array)</code> 已拋 TypeError 無法直接重現 natas24 → 用 <code>null</code> 明確模擬 PHP 7 並標註。</li>
+        <li><strong>Natas 續解：natas28 成功（ECB 加密攻擊），natas29 卡住。</strong>natas28 是本專案<strong>最複雜的加密學實戰</strong>：查詢被 AES-ECB 加密後放在 URL，且有 <code>addslashes</code>。攻擊分四步：（1）<strong>block 對齊分析</strong>——比較密文長度變化，推導出 query 從 block 2 offset 6 開始（prefix = 38 字元）；（2）<strong>ECB block splicing</strong>——用 <code>query="A"*10</code> 產生「乾淨 block 2」（不含反斜線），替換 <code>query="A"*9+"' OR 1=1 -- "</code> 的 block 2（結尾是 <code>\</code>），讓單引號裸露而逃出字串（實測：原始無效、拼接後顯示笑話）；（3）<strong>hex 字面量</strong>繞過 payload 內的 <code>'natas29'</code> 引號（用 <code>0x6e617461733239</code>）；（4）<strong>1 欄 UNION</strong>（joke 表只有 1 欄）→ 取得 natas29 密碼。
+          <br><strong>★ ECB 攻擊的核心</strong>：<strong>「加密不會保護資料完整性」</strong>——攻擊者不需要金鑰，只要<strong>操作密文 block</strong> 就能改變明文。這是本專案的新缺口（<strong>ECB block 操作攻擊</strong>）。
+          <br><strong>natas29（Perl 過濾繞過）未突破，已誠實記錄。</strong>實測 <code>?file=perl underground</code> 有效（123KB），但 <code>index.pl</code>、<code>/etc/passwd</code>、所有路徑穿越（含 <code>....//</code>、URL 編碼、雙重編碼、null byte、反斜線、Perl pipe 兩種方向、其他參數名）全部返回空。推論過濾為 <code>s/[\.\/]//g</code>（移除 <code>.</code> 和 <code>/</code>）——若成立則<strong>無法構造任何路徑</strong>，而讀取源碼的途徑（也需要 <code>.</code>）又被同一道過濾擋住。已嘗試 20+ 種繞過方法。<strong>這不是放棄，而是遇到需要更多資訊才能解決的關卡。</strong>
+          <br><strong>累計：natas0 → natas28（29 關 / 34 關）</strong>。剩餘 natas29-33 因 natas29 卡住而無法繼續（需 natas29 的密碼才能進入 natas30）。</li>
+        <li><strong>🎉 Natas 全部 34 關完成（natas29 → natas34 最終頁面）。</strong>本次解出最後五關，每關都是不同的技術類型：
+          <br><strong>natas29 · Perl <code>open()</code> 命令注入</strong>：源碼 <code>open(FD, "$f.txt")</code> 是 2 參數形式——<code>|</code> 前綴可執行命令，但會被加上 <code>.txt</code>，須用 <strong><code>%00</code> null byte 截斷</strong>；且 <code>natas</code> 被過濾，用 <strong><code>na''tas</code>（shell 空字串連接）繞過</strong>。★ 我卡住的真正原因：一直只找 <code>&lt;pre&gt;</code>，但 <code>open(FD, "|cmd")</code> 的 stdout <strong>直接輸出到網頁（在 HTML 之後）</strong>。
+          <br><strong>natas30 · DBI <code>quote()</code> 型別混淆</strong>：<code>quote($value, $data_type)</code> 的第二參數是 SQL 型別，若為 NUMERIC（2）則<strong>不加引號直接返回</strong>；而 <code>param()</code> 在函數參數位置是列表上下文——<strong>同一參數名出現兩次</strong>（<code>password=X&amp;password=2</code>）就變成 <code>quote($value, $type)</code>，注入成功。
+          <br><strong>natas31 · CGI <code>param()</code> + ARGV</strong>：<code>upload('file')</code> <strong>只要求其中一個</strong> file 是檔案；<code>param('file')</code> 標量取<strong>第一個</strong>；<code>&lt;&gt;</code> 對字串 <code>ARGV</code> 會<strong>遍歷 <code>@ARGV</code>（URL <code>?</code> 後的參數）</strong>當檔案路徑——用 <code>file=ARGV</code> + <code>?/etc/natas_webpass/natas32</code> 讀取。
+          <br><strong>natas32 · SUID binary 提權</strong>：用 <code>?ls -l . |</code> 列出目錄，發現 <code>getpassword</code> 是 <strong><code>-rws</code> SUID root</strong>，用 <code>?./getpassword |</code> 執行取得密碼。
+          <br><strong>natas33 · PHAR 反序列化</strong>：<code>md5_file()</code> 接受 <code>phar://</code> 包裝器 → 觸發 PHAR metadata <strong>反序列化</strong> → <code>Executor::__destruct()</code> 執行 <code>passthru("php " . $filename)</code>。用本機 PHP 生成 PHAR（<code>phar.readonly=0</code>），<strong>signature 設為我們 webshell 的 MD5</strong> 通過檢查，上傳後用 <code>filename=phar:///natas33/upload/payload.phar/test</code> 觸發。
+          <br><strong>最終</strong>：<code>natas34 / cT3LVC2sd5RtaRHdAE2xr16nYGuArbbK</code> → 「<strong>Congratulations! You have reached the end... for now.</strong>」
+          <br><strong>五個新缺口</strong>：ECB block 操作、Perl <code>open()</code> 命令注入、DBI <code>quote()</code> 型別混淆、CGI <code>param()</code>+ARGV、PHAR 反序列化——本專案目前都無對應靶場。<strong>累計：natas0 → natas34（全部 34 關完成）</strong>。</li>
+        <li><strong>五個缺口全部補強（<code>ecblab</code> 4/4、<code>perllab</code> 3/3、<code>pharlab</code> 2/2，合計 9/9）。</strong>這次建立了三個真實環境靶場：<strong>Python + pycryptodome</strong>（ECB）、<strong>真實 Perl 5.42.3 CGI</strong>（下載 291 MB portable 版）、<strong>真實 PHP 8.3.35</strong>（PHAR）。
+          <br><strong>① ECB block 操作（<code>ecblab</code> 4/4）</strong>：明文 = <code>SELECT * FROM joke WHERE joke LIKE '%</code> + query + <code>%' ORDER BY...</code>，AES-ECB 加密。<strong>E1 模式偵測</strong>——用 <code>"B"*11+"A"*32</code> 讓 A 對齊 block 邊界（offset 48）→ 重複 block；<strong>E2 對照</strong>——直接注入被 <code>addslashes</code> 轉義成 <code>\'</code>；<strong>E3 block splicing</strong>——<code>C1[0:48] + C2[48:]</code> 去掉反斜線 → 單引號裸露 → SQL 注入成功；<strong>安全對照</strong> AES-GCM 篡改 → 403。
+          <br><strong>② Perl <code>open()</code> 命令注入（P29）</strong>：真實 Perl CGI，四層驗證——正常 open 失敗、<code>|echo hello%00</code> 執行成功、<code>|type secrets/secret.txt%00</code> 被過濾、<code>|type secre^ts\secr^et.txt%00</code> <strong>用 <code>^</code> 轉義繞過</strong>（Windows cmd 的 <code>''</code> 無效）→ 讀到 FLAG。
+          <br><strong>③ DBI <code>quote()</code> 型別混淆（P30）</strong>：<code>password=X&amp;password=2</code> 讓 <code>param()</code> 在列表上下文返回多值 → <code>quote($value, $type)</code> → type=NUMERIC 不加引號 → 讀到 FLAG。<strong>★ 誠實標註</strong>：<code>param()</code> 多值是真實 CGI 行為，但 DBD::mysql 的型別參數在 <strong>DBD::SQLite 中被忽略</strong>（實測所有 type 都正常 quote），因此用 <code>quote_mysql()</code> 明確模擬。
+          <br><strong>④ CGI <code>param()</code> + ARGV（P31）</strong>：<code>upload('file')</code> 只要求一個檔案、<code>param('file')</code> 標量取第一個、<code>&lt;&gt;</code> 對 <code>ARGV</code> 遍歷 <code>@ARGV</code>——用 <code>file=ARGV</code> + <code>?secrets/secret.txt</code> 讀任意檔案（還讀了 <code>C:/Windows/win.ini</code> 證明）。
+          <br><strong>⑤ PHAR 反序列化（<code>pharlab</code> 2/2）</strong>：生成 PHAR（metadata = Logger 物件）→ 上傳 → <code>phar://</code> 觸發 → <code>__destruct()</code> 寫入 shell.php（88 bytes）→ RCE。<strong>★ 重大發現：PHP 8.3 已緩解</strong>——實測 <code>file_exists</code>／<code>file_get_contents</code>／<code>md5_file</code>／<code>is_file</code>／<code>filemtime</code>／<code>stat</code>／<code>fopen</code> <strong>全部不再反序列化 PHAR metadata</strong>，只有明確 <code>getMetadata()</code> 才會。natas33 用的是舊版 PHP 所以仍可攻擊；本靶場用明確 <code>getMetadata()</code> 模擬並標註。
+          <br><strong>三個共同主題</strong>：「加密」不等於「完整性」（ECB、PHAR）、「上下文」決定行為（Perl 的標量 vs 列表）、<strong>版本差異是滲透測試的關鍵</strong>（PHP 7 的 <code>strcmp(array)</code> 繞過在 PHP 8 已修復；PHAR 檔案操作反序列化在 8.3 已緩解）。<strong>靶場增至 22 個、驗證型態 24 種、報告 34 份。</strong></li>
+        <li><strong>讀 5 篇公開的 root cause analysis。</strong>Project Zero 的 0day RCA 清單是優質來源。每篇寫一頁摘要：bug 類型、觸發條件、為什麼 fuzzing 沒抓到。</li>
+      </ol>
+
+      <h4>推薦資源</h4>
+      <div>
+        <span class="tag">MITRE CWE Top 25</span>
+        <span class="tag">cwe.mitre.org</span>
+        <span class="tag">Project Zero 0day RCA</span>
+        <span class="tag">OWASP Top 10:2025</span>
+        <span class="tag">DVWA</span>
+        <span class="tag">OWASP WebGoat</span>
+        <span class="tag">PortSwigger Web Security Academy</span>
+        <span class="tag">pwn.college</span>
+        <span class="tag">CS:APP（深入理解計算機系統）</span>
+      </div>
+      <p style="font-size:14.6px;color:#4a5768;">
+        <a href="https://cwe.mitre.org/top25/archive/2024/2024_cwe_top25.html">CWE Top 25（2024）</a>、
+        <a href="https://googleprojectzero.github.io/0days-in-the-wild/rca.html">Project Zero 0day RCA</a>、
+        <a href="https://top10.owasp.org/2025/">OWASP Top 10:2025</a>、
+        <a href="https://osv.dev/">OSV（Open Source Vulnerabilities）</a>、
+        <a href="https://owasp.org/www-project-dependency-check/">OWASP Dependency-Check</a>、
+        <a href="https://cheatsheetseries.owasp.org/">OWASP Cheat Sheet Series</a>、
+        <a href="https://portswigger.net/web-security">PortSwigger Web Security Academy</a>、
+        <a href="https://pwn.college/">pwn.college</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Stage 2 -->
+  <div class="stage s2">
+    <div class="sh">
+      <span class="st">第二階段：工具鏈</span>
+      <span class="sd">建議 2–3 個月｜目標：能為一個真實開源專案建立可重複的漏洞發現流程</span>
+    </div>
+    <div class="sb">
+      <p>這一階段的產出標準是：<strong>對一個 OSS-Fuzz 收錄的專案，在本機成功建置、跑起 fuzzer、並重現至少一個既有 crash</strong>。</p>
+
+      <h4>必學主題</h4>
+      <ul>
+        <li><strong>Fuzzer 原理與實作</strong>：coverage-guided fuzzing 的基本迴圈（seed → mutate → execute → 收集 coverage → 保留有價值輸入）、AFL 的 forkserver 與 shared memory coverage、libFuzzer 的 in-process 模式、corpus 最小化（<code>afl-cmin</code>、<code>afl-tmin</code>）。</li>
+        <li><strong>Fuzz harness 撰寫</strong>：這是 AI 進入此領域後最有價值的技能。學會為一個 library 寫出「不吃 stdin、直接呼叫 API、正確處理記憶體釋放」的 harness，並用 <code>LLVMFuzzerTestOneInput</code> 介面。</li>
+        <li><strong>Sanitizer</strong>：ASan（記憶體錯誤）、UBSan（未定義行為）、MSan（未初始化讀取）、TSan（資料競爭）。理解 <code>ASAN_OPTIONS</code>、<code>UBSAN_OPTIONS</code> 的關鍵開關，以及 sanitizer 報告中的 <code>SUMMARY</code> 行如何對應到 bug 類型。</li>
+        <li><strong>除錯與觀測</strong>：GDB 的 breakpoint / watchpoint / <code>bt</code> / <code>x</code> 指令；用 <code>rr</code> 做可重播的除錯；用 crash 的 stack trace 回溯到根因。</li>
+        <li><strong>靜態分析</strong>：CodeQL 的查詢語言基礎（<code>from ... where ... select</code>）、資料流庫（<code>DataFlow::Configuration</code>）；Semgrep 的 pattern 語法與 <code>--config auto</code>。重點是理解「規則如何表達資料流」，而不是背 API。</li>
+        <li><strong>建置系統</strong>：CMake、Makefile、以及 OSS-Fuzz 的 <code>build.sh</code> 慣例。很多時候真正的困難是「讓它編起來」。</li>
+      </ul>
+
+      <h4>可執行練習</h4>
+      <ol class="checklist">
+        <li><strong>自製目標 + AFL++ 完整迴圈。</strong>寫一個刻意有漏洞的 C 程式（讀取檔案格式），用 <code>afl-cc</code> 插樁編譯，準備 3 個 seed，跑 30 分鐘，觀察 <code>afl-whatsup</code>、coverage 成長與 crash 出現。然後用 <code>afl-tmin</code> 最小化 crash 輸入。</li>
+        <li><strong>libFuzzer 重寫同一題。</strong>改用 <code>LLVMFuzzerTestOneInput</code> + <code>-fsanitize=fuzzer,address</code>，比較與 AFL++ 的差異（速度、發現時間、corpus 品質）。寫下你的觀察。</li>
+        <li><strong>重現一個真實 OSS-Fuzz crash。</strong>挑一個 OSS-Fuzz 收錄的專案，依其 Dockerfile／<code>build.sh</code> 在本機建置，用 <code>reproduce</code> 腳本重現一個已修正的 crash。這一步會讓你理解「容器化重現環境」為什麼是 CyberGym 等 benchmark 的基礎設施。</li>
+        <li><strong>寫一條 CodeQL 規則。</strong>對一個小型 C repo 寫一條找出「未檢查回傳值的 <code>malloc</code>」或「格式字串來自外部輸入」的查詢，記錄命中數與誤報數。然後改寫成 Semgrep 規則，比較兩者的表達力與誤報率。</li>
+        <li><strong>GDB 根因分析。</strong>拿練習 1 的 crash，用 GDB 找出<strong>確切的指令與變數值</strong>，寫一份一頁的 RCA：崩潰點、傳入值、為什麼會超過邊界、正確的修法。這份 RCA 就是未來餵給 LLM 做變體分析的完美起點。</li>
+        <li><strong>跑一次完整的 CRS（進階）。</strong>在 Linux 環境上依 <a href="https://github.com/trailofbits/buttercup">Buttercup</a> 官方說明以 standalone 版本跑官方內建的易受攻擊 sample repo（官方稱可在 10 分鐘內找到並修補）。重點不是「找到漏洞」，而是<strong>觀察一個競賽級系統如何把 fuzzer、sanitizer、靜態分析與 patch 驗證串成自動迴圈</strong>，並閱讀它「PoV 不再觸發 + 其他功能不破壞」的雙重驗證條件。</li>
+      </ol>
+
+      <h4>推薦資源</h4>
+      <div>
+        <span class="tag">AFL++ 官方文件</span>
+        <span class="tag">libFuzzer 文件</span>
+        <span class="tag">OSS-Fuzz docs</span>
+        <span class="tag">Fuzzing Book</span>
+        <span class="tag">CodeQL docs</span>
+        <span class="tag">Semgrep docs</span>
+        <span class="tag">GDB / rr</span>
+        <span class="tag">OSS-Fuzz-FuzzIntrospector</span>
+      </div>
+      <p style="font-size:14.6px;color:#4a5768;">
+        <a href="https://github.com/AFLplusplus/AFLplusplus">AFL++</a>、
+        <a href="https://llvm.org/docs/LibFuzzer.html">libFuzzer</a>、
+        <a href="https://google.github.io/oss-fuzz/">OSS-Fuzz docs</a>、
+        <a href="https://google.github.io/oss-fuzz/advanced-topics/fuzz-introspector/">Fuzz Introspector</a>、
+        <a href="https://www.fuzzingbook.org/">The Fuzzing Book</a>、
+        <a href="https://codeql.github.com/docs/">CodeQL docs</a>、
+        <a href="https://semgrep.dev/docs/">Semgrep docs</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Stage 3 -->
+  <div class="stage s3">
+    <div class="sh">
+      <span class="st">第三階段：AI 方法</span>
+      <span class="sd">建議 2–3 個月｜目標：能設計並量測一個 AI 漏洞挖掘 agent</span>
+    </div>
+    <div class="sb">
+      <p>這一階段的產出標準是：<strong>在一個公開 benchmark（如 CyberGym 的子集）上，跑出可重現的成功率數字，並能解釋失敗案例的原因。</strong></p>
+
+      <h4>必學主題</h4>
+      <ul>
+        <li><strong>Prompt 設計（針對漏洞研究）</strong>：不是「請找漏洞」，而是明確指定<strong>任務型態</strong>（variant analysis vs 開放式探索）、<strong>可用的工具</strong>、<strong>輸出格式</strong>（必須附可執行的 testcase）、以及<strong>不確定時的處理方式</strong>（要求標示不確定，而非編造）。Big Sleep 的 prompt 設計關鍵是：給 agent「commit message + diff」，並請它審查當前 HEAD 的相關問題——把開放問題轉成有先驗的問題。</li>
+        <li><strong>Agent 架構</strong>：工具定義（schema）、狀態管理、失敗恢復策略、context 壓縮、多輪預算控制。研究並比較三種架構（單 agent 長 context / 多 agent 分工 / 大量短生命週期 agent + coordinator）在成本與成功率的差異。</li>
+        <li><strong>工具整合</strong>：讓 agent 能呼叫 code browser、編譯器、debugger、fuzzer、sanitizer。核心設計原則：<strong>所有產出必須可被外部機制證偽</strong>。</li>
+        <li><strong>評估指標</strong>：這是本階段最重要的知識點。必須能區分並正確計算：</li>
+      </ul>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>指標</th><th>定義</th><th>常見誤用</th></tr></thead>
+          <tbody>
+            <tr><td><b>Pass@1</b>（單次成功率）</td><td>一次嘗試就成功的任務比例</td><td>與 Pass@k 混用而誇大能力</td></tr>
+            <tr><td><b>Pass@k / best-of-k</b></td><td>k 次嘗試中至少一次成功的比例</td><td>不提成本就宣稱進步（CyberGym 從單次約 30% 到 30 次約 67%）</td></tr>
+            <tr><td><b>False positive rate</b></td><td>報告為漏洞但無法觸發的比例</td><td>完全不報，只報成功率</td></tr>
+            <tr><td><b>Recall（針對已知漏洞）</b></td><td>給定描述後能重現的比例</td><td>與「開放式發現」混為一談</td></tr>
+            <tr><td><b>Novel discovery rate</b></td><td>在無已知答案下找到新 bug 的比例</td><td>Anthropic 數據：單次約 5%，30 次超過 33%</td></tr>
+            <tr><td><b>Cost per verified bug</b></td><td>每個經人工確認的漏洞的總成本</td><td>只算 API 費用，忽略 triage 工時</td></tr>
+            <tr><td><b>Trajectory efficiency</b></td><td>工具呼叫次數、無效步驟比例、token 用量</td><td>忽略「花了 200 步才找到」的可持續性問題</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>可執行練習</h4>
+      <ol class="checklist">
+        <li><strong>建立變體分析迴圈。</strong>挑一個自己熟悉的開源專案，找一個已修補的安全 commit。寫一個腳本：把 commit message + diff 交給 LLM，要求它在當前版本找同類問題，並產出 testcase；然後自動編譯執行、檢查是否崩潰。量測：產出多少假設、多少能編譯、多少真的崩潰。</li>
+        <li><strong>對照三種 prompt 策略。</strong>同一題、同一個模型，比較（a）純問答式、（b）要求輸出 testcase、（c）agent 可用工具並可迭代。用「能否產出可觸發的 PoC」為唯一判準，記錄成功率與 token 成本。</li>
+        <li><strong>接上 sanitizer 當裁判。</strong>把你的 agent 輸出強制經過「編譯 + 執行 + sanitizer 檢查」三道關卡，並統計<strong>被這三道關卡擋下的比例</strong>。這個比例就是你對 LLM 幻覺的實際量測。</li>
+        <li><strong>跑 CyberGym 子集。</strong>以官方提供的容器化環境跑 20–30 個任務，計算 Pass@1 與 Pass@10，和公開 leaderboard 的數字對照，分析你的失敗案例屬於哪一類（檢索失敗／假設錯誤／環境問題／模型能力不足）。</li>
+        <li><strong>Harness 生成實驗。</strong>用 <code>oss-fuzz-gen</code> 或自建流程，為 5 個 OSS-Fuzz 專案生成 fuzz target，量測：build 成功率、是否提升 coverage、是否觸發 crash。這是把 LLM 用在<strong>可自動驗證環節</strong>的最佳練習。</li>
+        <li><strong>實作「偽造定義」偵測（借鏡 HarnessAgent 研究）。</strong>該研究發現 LLM 會<strong>偽造不存在的函式定義</strong>來讓 harness 通過編譯（研究中 56 個 harness 有 10 個以上含此類偽造）。請在你的生成流程加入結構化檢查：解析生成的 harness，確認呼叫的每個函式都真的存在於專案符號表中。<strong>沒有這道檢查，「能編譯」就是一個無效的成功判準。</strong></li>
+        <li><strong>讀一篇訓練配方論文並複現其評估設定。</strong>精讀 <a href="https://arxiv.org/abs/2512.07533">VulnLLM-R</a>，重點看它如何用<strong>雙教師蒸餾 + 錯誤答案過濾 + constitution-based correction</strong>訓練 7B 模型，以及它公開的失敗經驗（以 GRPO 做線上 RL 導致 false negative rate 大幅上升的 reward hacking 現象）。這是理解「AI 方法成敗取決於資料與獎勵設計」的最佳教材。</li>
+        <li><strong>把狀態寫出 context（journal 模式）。</strong>照 IronCurtain 的設計做一個最小實驗：讓 orchestrator 不直接讀原始碼，只依賴一份 <strong>append-only 的執行日誌</strong>（記錄假設、做過的工具呼叫、觀察結果）來決定下一步。比較「全放在 context 裡」與「狀態外置」兩種做法，在<strong>同一任務上執行到第 20、40、60 步時</strong>的準確率與 token 用量。這是理解「為什麼長流程 agent 會失準」最直接的方式。</li>
+        <li><strong>成本量測（把 cost per investigation 變成你的指標）。</strong>記錄單次完整調查的 token 數與費用，與公開基準對照：IronCurtain 報告 Opus 約 150 美元／1,000 萬 tokens、Sonnet 約 30 美元；CyberGym 的成本上限是每漏洞 2 美元。<strong>思考兩者的差異來源</strong>——「已知漏洞重現」與「開放式調查」是不同量級的任務，若把兩者的成本混為一談，預算估算會嚴重失準。</li>
+        <li><strong>多 agent 分工實驗（HPTSA 模式）。</strong>依 EACL 2026 的 HPTSA 設計，實作一個「規劃 agent + 可被呼叫的 subagent」架構：規劃 agent 只負責探索與決定呼叫哪個 subagent，不親自解題。與單一 agent 比較成功率（該論文在 14 個真實漏洞上報告最高 4.3 倍提升），並記錄 subagent 之間的成功案例重疊度。</li>
+        <li><strong>Crash triage 實驗。</strong>收集 20 個 crash（可用 fuzzer 自產），要 LLM 判斷是否同源並分類 CWE，與你的人工判斷比對，計算準確率與一致性。</li>
+      </ol>
+
+      <h4>推薦資源</h4>
+      <div>
+        <span class="tag">Project Naptime</span>
+        <span class="tag">Big Sleep blog</span>
+        <span class="tag">oss-fuzz-gen</span>
+        <span class="tag">CyberGym</span>
+        <span class="tag">Cybench</span>
+        <span class="tag">SEC-bench</span>
+        <span class="tag">VulnLLM-R</span>
+        <span class="tag">HarnessAgent</span>
+        <span class="tag">OpenHands</span>
+        <span class="tag">AIxCC CRS 開源元件</span>
+        <span class="tag">Anthropic cyber defenders report</span>
+      </div>
+      <p style="font-size:14.6px;color:#4a5768;">
+        <a href="https://projectzero.google/2024/06/project-naptime.html">Project Naptime</a>、
+        <a href="https://projectzero.google/2024/10/from-naptime-to-big-sleep.html">Big Sleep</a>、
+        <a href="https://github.com/google/oss-fuzz-gen">oss-fuzz-gen</a>、
+        <a href="https://www.cybergym.io/">CyberGym</a>、
+        <a href="https://cybench.github.io/">Cybench</a>、
+        <a href="https://github.com/SEC-bench/SEC-bench">SEC-bench</a>、
+        <a href="https://arxiv.org/abs/2512.07533">VulnLLM-R</a>、
+        <a href="https://arxiv.org/abs/2512.03420">HarnessAgent／Harness 生成研究</a>、
+        <a href="https://github.com/All-Hands-AI/OpenHands">OpenHands</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Stage 4 -->
+  <div class="stage s4">
+    <div class="sh">
+      <span class="st">第四階段：實戰與評測</span>
+      <span class="sd">持續進行｜目標：在公開、可驗證的舞台上證明能力</span>
+    </div>
+    <div class="sb">
+      <p>這一階段的產出標準是：<strong>至少一項「可被外部驗證」的成果</strong>——一個被合併的安全修補、一個被接受的 CVE、一個 benchmark 上的公開分數，或一個 CTF 名次。</p>
+
+      <h4>四條並行路徑</h4>
+
+      <h4>路徑 1：公開 Benchmark</h4>
+      <ul>
+        <li>在 CyberGym 上建立可重現的分數，並撰寫方法說明（用了什麼 agent 架構、什麼成本、失敗模式分析）。</li>
+        <li>用 SEC-bench 對自己的流程做自動化評測。它同時評兩項任務——<strong>PoC 生成</strong>與<strong>漏洞修補</strong>——可清楚看出自己的能力落在哪一側；作者報告的 SOTA code agent 上限為 18.0%（PoC）與 34.0%（修補），是很好的對照 baseline。</li>
+        <li>關鍵心法：<strong>報告 Pass@1 與 Pass@k 時必須同時報告成本</strong>，否則數字沒有意義。</li>
+      </ul>
+
+      <h4>路徑 1b：跑一個真正的 CRS（強烈建議）</h4>
+      <ul>
+        <li>在 Linux 機器上部署 <a href="https://github.com/trailofbits/buttercup">Buttercup</a> 的 standalone 版本，或使用 <a href="https://arxiv.org/abs/2603.08566">OSS-CRS</a> 框架跑 Atlantis。這是目前少數「你個人真的能跑起來」的競賽級端到端系統。</li>
+        <li>觀察重點：它如何從 crash 產生 PoV、如何去重、如何用多個 agent 迭代修補，以及<strong>如何強制 LLM 預算上限</strong>（OSS-CRS 把 LLM 預算當成與 CPU／記憶體同等的一級資源）。</li>
+        <li>延伸思考：OSS-CRS 論文指出七隊 CRS 都因為綁定已關閉的雲端環境而難以複用——這正是「工程整合能力」比「單點技術」更稀缺的證據。</li>
+      </ul>
+
+      <h4>路徑 2：CTF</h4>
+      <ul>
+        <li>從 picoCTF / pwn.college 起步，進到 CTFtime 上的公開賽事。</li>
+        <li>練習重點放在 pwn 與 rev 類別——這些類別直接鍛鍊第二階段建立的 sanitizer / debugger 能力。</li>
+        <li>也可以做「AI 解 CTF」的實驗：以 Cybench 的題型為範本，量測自己的 agent 在哪些類別強、哪些類別弱（Cybench 的公開結果可作為對照基線）。</li>
+      </ul>
+
+      <h4>路徑 3：Bug Bounty</h4>
+      <ul>
+        <li>從有明確 scope 與 safe harbor 條款的平台開始（HackerOne、Bugcrowd、Intigriti 等），<strong>先讀完 scope 與測試政策再動手</strong>。</li>
+        <li>建議起步順序：VDP（漏洞揭露計畫，通常無獎金但門檻低）→ 有明確 scope 的公開專案 → 正式 bounty。</li>
+        <li>AI 輔助的實務定位：用 AI 做<strong>廣度掃描與排序</strong>，由自己完成<strong>驗證與最小化 PoC</strong>；不要提交未經自己驗證的 AI 輸出——這既浪費 triager 時間，也可能違反平台規則。</li>
+      </ul>
+
+      <h4>路徑 4：開源專案貢獻</h4>
+      <ul>
+        <li>選擇有 CI 與安全政策（SECURITY.md）的專案，特別是 OSS-Fuzz 收錄的專案。</li>
+        <li>低門檻高價值的貢獻：<strong>新增或改進 fuzz harness</strong>。這直接對應第二階段技能，維護者通常非常歡迎，且成果客觀（coverage 提升、找到 crash）。</li>
+        <li>進階：修補你找到的問題，附上 PoC 與回歸測試；或撰寫新的 CodeQL / Semgrep 規則並貢獻到社群規則庫。</li>
+      </ul>
+
+      <h4>可執行練習</h4>
+      <ol class="checklist">
+        <li><strong>提交一個 fuzz harness PR。</strong>選一個 OSS-Fuzz 專案，找出 coverage 缺口（用 Fuzz Introspector），新增 harness，附上本地覆蓋率數據。目標：被合併。</li>
+        <li><strong>完成一次完整的負責任揭露。</strong>在自己的靶場或允許測試的目標上，走完：確認問題 → 製作最小 PoC → 撰寫報告（影響、重現步驟、修補建議）→ 通報 → 等待 → 公開。這個流程經驗比找到 bug 本身更稀缺。</li>
+        <li><strong>建立個人評測報告。</strong>對 3 個不同類型的目標（一個 CLI C 工具、一個 web app、一個 library）跑你的 AI 流程，產出一份誠實的報告：成功／失敗、成本、誤報率、改進方向。<strong>寫下失敗比寫下成功更重要。</strong></li>
+        <li><strong>持續追蹤與複現。</strong>每月挑一篇新論文或新案例（如 AIxCC CRS 的開源實作、新的 benchmark 論文），複現其核心實驗或至少驗證其數據。這是保持與領域同步的最低成本方式。</li>
+      </ol>
+
+      <h4>推薦資源</h4>
+      <div>
+        <span class="tag">CTFtime</span>
+        <span class="tag">picoCTF</span>
+        <span class="tag">pwn.college</span>
+        <span class="tag">HackerOne</span>
+        <span class="tag">Bugcrowd</span>
+        <span class="tag">OSS-Fuzz 貢獻指南</span>
+        <span class="tag">AIxCC Competition Archive</span>
+        <span class="tag">DEF CON / Black Hat</span>
+      </div>
+      <p style="font-size:14.6px;color:#4a5768;">
+        <a href="https://ctftime.org/">CTFtime</a>、
+        <a href="https://picoctf.org/">picoCTF</a>、
+        <a href="https://pwn.college/">pwn.college</a>、
+        <a href="https://www.hackerone.com/">HackerOne</a>、
+        <a href="https://www.bugcrowd.com/">Bugcrowd</a>、
+        <a href="https://google.github.io/oss-fuzz/advanced-topics/reproducing/">OSS-Fuzz 貢獻指南</a>、
+        <a href="https://archive.aicyberchallenge.com/">AIxCC Competition Archive</a>
+      </p>
+    </div>
+  </div>
+
+  <h3>6.5 四階段總覽與時間預算</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>階段</th><th>建議時長</th><th>核心產出（驗收條件）</th><th>最常見的失敗模式</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>S1 漏洞原理</b></td>
+          <td>2–3 個月</td>
+          <td>10 個自製漏洞程式的 sanitizer 報告 + 5 篇 RCA 摘要</td>
+          <td>只背 CWE 清單，沒實際看過崩潰訊息</td>
+        </tr>
+        <tr>
+          <td><b>S2 工具鏈</b></td>
+          <td>2–3 個月</td>
+          <td>本機重現一個 OSS-Fuzz crash + 一條自寫 CodeQL/Semgrep 規則</td>
+          <td>卡在建置環境就放棄，或只用現成工具不讀原理</td>
+        </tr>
+        <tr>
+          <td><b>S3 AI 方法</b></td>
+          <td>2–3 個月</td>
+          <td>CyberGym/SEC-bench 子集上的可重現分數 + 幻覺率量測</td>
+          <td>只看成功率不看成本；不做外部驗證就相信 LLM 輸出</td>
+        </tr>
+        <tr>
+          <td><b>S4 實戰評測</b></td>
+          <td>持續</td>
+          <td>被合併的 harness PR／CVE／公開 benchmark 分數</td>
+          <td>跳過揭露流程；提交未驗證的 AI 輸出</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <a class="toplink" href="#toc">↑ 回目錄</a>
+</section>
+
+<!-- ===================== 7 ===================== -->
+<section id="ch7">
+  <h2 class="ch"><span class="num">CH 07</span>基準與資料集 <span class="en">Benchmarks &amp; Datasets</span></h2>
+
+  <p>選擇 benchmark 時，第一個問題不是「哪個最有名」，而是<strong>「它評的是重現、發現、修補，還是利用？」</strong>四者難度與意義完全不同。</p>
+
+  <div class="tw">
+    <table>
+      <thead>
+        <tr><th>名稱</th><th>規模</th><th>評什麼</th><th>怎麼用</th><th>已知限制</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>CVE / CWE</b><br><span style="font-size:13px;color:#4a5768;">基礎資料層</span></td>
+          <td>CVE 為數十萬筆；CWE 為分類體系</td>
+          <td>不是 benchmark，而是<strong>共同的識別與分類語言</strong></td>
+          <td>用來標註 finding、建立自己的資料集、對照歷史修補；CWE Top 25 作為學習地圖</td>
+          <td>CVE 編號不代表嚴重度；同一 CVE 可能對應多個 CWE；有大量未編號的真實 bug</td>
+        </tr>
+        <tr>
+          <td><b>CyberGym</b><br><span style="font-size:13px;color:#4a5768;">UC Berkeley RDI</span></td>
+          <td><b>1,507 個真實漏洞</b>、<b>188 個開源專案</b>、28 種 crash 類型</td>
+          <td><b>漏洞重現</b>：給修補前 codebase + 漏洞描述（含位置、類型、root cause 線索），要求產出 PoC；必須在 pre-patch 觸發、post-patch 不觸發</td>
+          <td>執行導向、由掛載 sanitizer 的容器自動判定。亦可跑 Level-0（僅給 codebase）做開放式發現</td>
+          <td>描述含提示，與真實無提示情境有落差；資料源自 OSS-Fuzz，偏向記憶體安全類；成本上限設定會影響模型間可比性</td>
+        </tr>
+        <tr>
+          <td><b>Cybench</b><br><span style="font-size:13px;color:#4a5768;">ICLR 2025</span></td>
+          <td>40 題 CTF（Anthropic 評估採 37 題子集）</td>
+          <td><b>CTF 解題能力</b>：多階段、需要工具鏈組合的任務</td>
+          <td>以 k 次嘗試的成功率比較模型；適合追蹤「長流程任務」能力進展</td>
+          <td>CTF 有可解性保證與明確 flag，與真實系統不同；題數少，統計變異大；需注意是否「教到測試上」</td>
+        </tr>
+        <tr>
+          <td><b>SEC-bench</b><br><span style="font-size:13px;color:#4a5768;">NeurIPS 2025</span></td>
+          <td>自動建構的真實軟體安全任務；每實例成本 <b>0.87 美元</b></td>
+          <td><b>真實安全工程任務</b>：以 multi-agent scaffold 自動建構含 harness 的 repo、隔離環境重現漏洞、產生 gold patch；評測兩項任務——<b>PoC 生成</b>與<b>漏洞修補</b></td>
+          <td>以官方 harness 對自己的 agent 跑一輪；作者報告 SOTA code agent 上限為 PoC 生成 18.0%、修補 34.0%，可作為 baseline 對照</td>
+          <td>任務仍由自動化流程生成，其「真實性」介於合成資料與野外漏洞之間；資料規模細節需查原論文（Paper PDF 已於 NeurIPS proceedings 公開）</td>
+        </tr>
+        <tr>
+          <td><b>AIxCC 評測框架</b><br><span style="font-size:13px;color:#4a5768;">DARPA / ARPA-H</span></td>
+          <td>決賽：<b>63 個合成漏洞</b>（官方更正後的分母）；另計 18 個真實軟體中的未知漏洞</td>
+          <td><b>發現 + 修補</b>的端到端能力（CRS 需自動分析、偵測、修補）</td>
+          <td>決賽公開數據：找出 54/63（<b>86%</b>）、修補 43 個（68%）；真實世界找到 18 個未知漏洞（C 程式庫 6 個、Java 程式庫 12 個）並提供 11 個修補；平均修補提交 45 分鐘、單位成本約 152 美元／任務；決賽涵蓋 23 個 repo、逾 5,400 萬行程式碼。七隊 CRS 全數開源</td>
+          <td><b>務必注意數字的版本</b>：官方曾更正分母（70→63），舊的 77%／61% 仍在大量二手來源流通；絕對數字 54 與 43 不變。此外，合成漏洞與真實漏洞難度不同，且各隊採混合策略（Team Atlanta 以傳統方法 + OpenAI 模型為主，Theori 以 LLM 為主），難以拆解「純 AI 貢獻」；C 程式庫的真實 0day 未被自動修補</td>
+        </tr>
+        <tr>
+          <td><b>VulnLLM-R 評測</b><br><span style="font-size:13px;color:#4a5768;">arXiv:2512.07533</span></td>
+          <td>函式級 + 專案級；Python/C/C++/Java；50 種以上 CWE；訓練 73 份 constitution 涵蓋 19 種 CWE</td>
+          <td><b>函式／專案級漏洞判定 + CWE 標註</b>：比較模型與 CodeQL、Infer、LlamaFireWall、LLMxCPG、Vul-RAG、DeepSeek-R1、QwQ-32B、o3、Claude-3.7-Sonnet</td>
+          <td>指標為 F1、false positive rate、false negative rate 與平均執行時間；另有 out-of-distribution CWE 測試集</td>
+          <td>部分資料集（PrimeVul）本身存在標註錯誤，作者需以 LLM 輔助人工驗證過濾；作者指出 race condition 類漏洞因缺乏動態資訊而容易誤報</td>
+        </tr>
+        <tr>
+          <td><b>HarnessAgent／Harness 生成評測</b><br><span style="font-size:13px;color:#4a5768;">arXiv:2512.03420</span></td>
+          <td>研究階段 29 個 OSS-Fuzz 專案（85 函式）；評估階段 243 個目標函式（65 C、178 C++）</td>
+          <td><b>Fuzz harness 生成品質</b>：是否編譯、是否實際呼叫目標函式、是否增加覆蓋率、是否通過語意測試</td>
+          <td>三次嘗試成功率（three-shot success rate）；實驗中並比較四種基礎模型（Claude Haiku 4.5、GPT-5-Mini、Qwen3-Coder、DeepSeek V3.2）</td>
+          <td>重點發現：LLM 會<b>偽造函式定義</b>以繞過編譯檢查，因此驗證必須包含「結構化檢查是否存在偽造定義」，單純的「能編譯」不是有效判準</td>
+        </tr>
+        <tr>
+          <td><b>XBOW benchmark</b><br><span style="font-size:13px;color:#4a5768;">廠商自建</span></td>
+          <td>廠商公開的 benchmark 集與真實目標結果（超過 1,060 個 HackerOne 提交）</td>
+          <td>自動化滲透測試的<strong>端到端解題能力</strong>（含多步 exploit chain）</td>
+          <td>可作為 Web/滲透測試類能力的參考基線</td>
+          <td><strong>廠商自述</strong>，非獨立第三方評測；應與 HackerOne 平台資料交叉驗證</td>
+        </tr>
+        <tr>
+          <td><b>OSS-Fuzz / Fuzz Introspector</b><br><span style="font-size:13px;color:#4a5768;">Google</span></td>
+          <td>數千個開源專案、持續建置</td>
+          <td><b>Fuzzing 產出</b>：harness 建置成功率、coverage、crash 數量</td>
+          <td>搭配 <code>oss-fuzz-gen</code> 評測 LLM 生成的 harness 品質；Fuzz Introspector 用來找覆蓋率缺口</td>
+          <td>不是「漏洞發現 benchmark」，但提供最貼近生產環境的 fuzzing 基礎設施</td>
+        </tr>
+        <tr>
+          <td><b>CyberSecEval 系列</b><br><span style="font-size:13px;color:#4a5768;">Meta</span></td>
+          <td>多個子集（含 insecure code、cyberattack helpfulness 等）</td>
+          <td>模型的資安相關能力與風險（含攻擊輔助傾向）</td>
+          <td>Project Naptime 曾以其 CyberSecEval2 作為改善 SOTA 的評測</td>
+          <td>偏「模型能力／風險」評測，非完整漏洞挖掘流程評測</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>7.1 如何選擇與正確解讀</h3>
+  <ul>
+    <li><strong>想提升「重現能力」→ CyberGym。</strong>它有客觀的自動判分（sanitizer 執行），且有 188 個專案的多樣性。</li>
+    <li><strong>想提升「長流程工具使用」→ Cybench。</strong>多階段任務會暴露 agent 在狀態管理上的弱點。</li>
+    <li><strong>想提升「修補品質」→ AIxCC 架構 + CyberGym 的 patch 研究設定。</strong>注意 Anthropic 已指出「與參考 patch 比對」的方法會產生 false negative（同一漏洞常有多種合法修法），因此不要用單一比對法當唯一判準。</li>
+    <li><strong>想提升「實際 fuzzing 產出」→ OSS-Fuzz。</strong>這是最接近產業實務的場域，且貢獻成果可被維護者驗證。</li>
+  </ul>
+
+  <div class="box warn">
+    <span class="t">解讀 benchmark 數字的三個檢查點</span>
+    <b>（1）是 Pass@1 還是 Pass@k？</b>CyberGym 的單次約 30% 與 30 次約 67% 相差一倍以上。
+    <b>（2）成本限制是否一致？</b>Anthropic 明確說明 Opus 4.1 因價格較高未套用相同的 2 美元限制，因此其單次數字不可與其他模型直接比較。
+    <b>（3）任務是否給了提示？</b>給定「位置、類型、root cause」的重現任務，與無提示的開放式發現，是兩種不同的能力。
+  </div>
+
+  <a class="toplink" href="#toc">↑ 回目錄</a>
+</section>
+
+<!-- ===================== 8 ===================== -->
+<section id="ch8">
+  <h2 class="ch"><span class="num">CH 08</span>合法與倫理邊界 <span class="en">Legal &amp; Ethical Boundaries</span></h2>
+
+  <div class="box danger">
+    <span class="t">本報告的撰寫視角</span>
+    本報告以<strong>教育與防禦研究</strong>為目的，僅涵蓋公開資料、公開競賽、開源工具與研究方法。報告中<strong>不包含</strong>任何針對特定真實目標的攻擊步驟、可直接利用的 exploit 程式碼或繞過防禦的操作流程。所有涉及漏洞發現的練習，都必須在自身擁有或已取得明確書面授權的環境中進行。
+  </div>
+
+  <h3>8.1 授權測試：法律風險的第一道線</h3>
+  <ul>
+    <li><strong>「未授權存取」在多數司法管轄區都是刑事犯罪。</strong>在台灣，《刑法》第 358 條至第 363 條針對無故入侵他人電腦、取得電磁紀錄、干擾系統等行為設有刑責；美國則有 CFAA（Computer Fraud and Abuse Act）。<strong>「我只是研究」不是抗辯理由。</strong></li>
+    <li><strong>書面授權必須明確。</strong>一份可用的授權應載明：測試目標的具體範圍（域名/IP/服務）、時間窗口、允許的技術（是否允許 DoS、社交工程、資料外洩測試）、聯絡窗口、以及緊急停止機制。</li>
+    <li><strong>Safe harbor 條款</strong>：部分平台與組織提供 safe harbor，承諾對善意遵循其政策的研究者不提告。動手前務必確認目標是否有此條款，以及其適用條件。</li>
+    <li><strong>第三方服務是常見陷阱。</strong>目標網站可能使用第三方 CDN、雲端服務或 SaaS——這些通常<strong>不在</strong>授權範圍內，即使它們是目標架構的一部分。</li>
+    <li><strong>自動化工具的放大風險。</strong>AI agent 會以極高頻率發出請求，可能導致服務中斷、大量日誌、或觸發第三方服務的濫用偵測。在授權範圍內部署自動化工具時，必須設定速率限制與範圍約束（XBOW 的公開說明即強調 scope control 在網路層強制執行、每個 agent 只在有限序列內行動）。</li>
+  </ul>
+
+  <h3>8.2 Bug Bounty 與負責任揭露流程</h3>
+
+  <h4>典型流程（防禦方視角）</h4>
+  <pre><code>1. 選擇目標與閱讀政策    確認 scope、safe harbor、禁測項目、獎金規則
+        │
+2. 發現疑似的安全問題    最小化驗證，取得「剛好足夠」的證據
+        │
+3. 自驗證與最小化        確認可重現、排除環境因素、去除破壞性步驟
+        │
+4. 撰寫報告              影響評估 + 重現步驟 + 修補建議（見下）
+        │
+5. 通報（Disclosure）    透過平台或專案的安全聯絡管道
+        │
+6. 協調等待期            通常 90 天為業界常見慣例，可依情況協商
+        │
+7. 修補驗證與公開        確認修補生效後，才考慮公開技術細節
+</code></pre>
+
+  <h4>一份好的漏洞報告應包含</h4>
+  <ul>
+    <li><strong>摘要</strong>：一句話說明問題與影響。</li>
+    <li><strong>影響評估</strong>：誰受影響、什麼條件下可被觸發、可能的後果（不提武器化細節）。</li>
+    <li><strong>重現步驟</strong>：最小、可重複、非破壞性。避免包含「如何擴大影響」的完整鏈路。</li>
+    <li><strong>證據</strong>：日誌、截圖、最小 PoC 輸入（僅足以觸發，不具武器化價值）。</li>
+    <li><strong>修補建議</strong>：具體可行的方向（例如「在進入 sink 前對長度做上限檢查」）。</li>
+  </ul>
+
+  <div class="box note">
+    <span class="t">AI 輔助揭露的特別注意事項</span>
+    用 AI 掃描 bug bounty 目標時，<strong>不要提交未經自己驗證的 AI 輸出</strong>。理由有三：（1）誤報會浪費 triager 時間，可能導致帳號信譽受損；（2）若平台政策禁止自動化掃描，可能違反規則；（3）AI 產出的 PoC 可能包含你不理解的副作用。<strong>AI 負責廣度，人負責驗證與判斷。</strong>
+  </div>
+
+  <h3>8.3 自建靶場：安全練習的基礎設施</h3>
+
+  <p>這是最推薦的練習方式：完整掌控、零法律風險、可任意實驗。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>靶場</th><th>類型</th><th>適合的學習階段</th><th>設定重點</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">DVWA</td><td>Web 漏洞（PHP）</td><td>S1</td><td>Docker 部署，調整安全等級觀察防禦差異</td></tr>
+        <tr><td class="mono">OWASP Juice Shop</td><td>現代 Web / API 漏洞</td><td>S1–S2</td><td>有內建進度追蹤，適合系統化練習</td></tr>
+        <tr><td class="mono">OWASP WebGoat</td><td>教學導向 Web 漏洞</td><td>S1</td><td>每關有提示，適合初學</td></tr>
+        <tr><td class="mono">PortSwigger Web Security Academy</td><td>線上實驗室（免費）</td><td>S1–S4</td><td>涵蓋面最廣；可用來磨練資料流思維</td></tr>
+        <tr><td class="mono">自架 VM + 脆弱服務</td><td>系統／記憶體安全</td><td>S2</td><td><strong>務必網路隔離</strong>（host-only 或 NAT，不可橋接到生產網段）</td></tr>
+        <tr><td class="mono">pwn.college / pwnable.tw</td><td>Binary exploitation 練習</td><td>S2</td><td>由淺入深，適合搭配 sanitizer 與 GDB 練習</td></tr>
+        <tr><td class="mono">本地 OSS-Fuzz 重現環境</td><td>真實專案 fuzzing</td><td>S2–S3</td><td>以 Docker 隔離，關閉對外網路</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box warn">
+    <span class="t">靶場隔離清單（動手前逐項確認）</span>
+    ① 虛擬機網路設為 host-only 或 NAT，<strong>不要用橋接模式</strong>連上辦公室／家用網段。
+    ② 靶場內不要放置真實憑證、金鑰或個人資料。
+    ③ 需要外網的靶場（如部分線上實驗室）僅在該服務授權範圍內使用。
+    ④ 對外掃描／fuzzing 前先確認目標歸屬（<code>whois</code>、專案 SECURITY.md）。
+    ⑤ 發生非預期行為（服務中斷、真實資料外洩跡象）時立即停止並記錄。
+  </div>
+
+  <h3>8.4 研究倫理：AI 時代的額外考量</h3>
+  <ul>
+    <li><strong>雙用途（dual-use）意識。</strong>Anthropic 公開說明其在提升 Claude 防禦能力的同時，<em>刻意避免</em>強化明確偏攻擊的能力（如進階利用或撰寫惡意程式）；AIxCC 亦要求所有 CRS 技術開源。這類「能力提升與風險控制並行」的設計思維，值得研究者參考。</li>
+    <li><strong>評測揭露的責任。</strong>若你的研究顯示某個模型能大量發現真實漏洞，公開時應考慮：是否同時揭露緩解措施、是否已走完負責任揭露、是否提供防禦方可用的資訊。</li>
+    <li><strong>避免「AI 洗版」。</strong>大規模自動化通報低品質 finding，會污染整個生態系的 triage 資源（包括開源維護者的志工時間）。這不是假設性風險，而是已經發生的事實：<strong>curl 專案因其 bug bounty 計畫被 AI 撰寫的提交淹沒而關閉該計畫</strong>（多為未經確認的 finding）；<strong>FFmpeg 維護者批評 Google 提交有效 bug 卻未附修補</strong>，稱之為「CVE slop」。實務原則：<strong>沒有附帶驗證與可套用修補的自動化通報，不應送出。</strong></li>
+    <li><strong>Anthropic 的雙軌策略值得參考。</strong>Anthropic 一邊公開其模型能找到 500+ 個高嚴重性漏洞，一邊隨模型發布<strong>以 probes（量測生成時之內部活化值）為核心的濫用偵測層</strong>，並可能採取即時干預（含阻擋惡意流量）。他們同時<strong>誠實承認這會對合法研究與部分防禦工作造成摩擦</strong>。這種「能力提升與風險控制並行、並公開承認副作用」的作法，是研究者撰寫相關論文或發布工具時可以模仿的揭露姿態。</li>
+    <li><strong>把「修補」納入流程，否則成本會外部化。</strong>上述兩個案例的共同點是「AI 自動化停在發現就結束」。AIxCC 的 CRS 設計明確要求以 PoV 確認漏洞並產生通過驗證的 patch——這是自動化應該追求的完整鏈路，也是避免把成本外部化給維護者的關鍵設計。</li>
+    <li><strong>記錄與可審計性。</strong>AI agent 的每一步決策都應留下可審計的 trajectory，以便事後解釋「為什麼發出這個請求」。這既是技術需求，也是合規需求。</li>
+    <li><strong>揭露時程的判斷。</strong>90 天是常見慣例但非硬性規定；若涉及仍在野利用（in-the-wild exploitation）或關鍵基礎設施，應與廠商協調更短或更長的窗口。<strong>AI 時代的新問題</strong>：Anthropic 在 2026-02 的研究中明確指出，<strong>業界標準的 90 天窗口「可能無法承受 LLM 發現漏洞的速度與數量」</strong>，業界需要能跟上節奏的新工作流。當單一組織能在數月內產出 500 個以上高嚴重性漏洞時，逐一手工協調揭露與修補的流程會成為瓶頸——這是目前尚未有共識解的政策空白。</li>
+    <li><strong>誤報是揭露流程的隱形成本。</strong>Anthropic 在其大規模研究中特別說明，<strong>幻覺（hallucinated bugs）「正日益對開源開發者造成不當負擔」</strong>，因此他們在通報每個漏洞前都做了大量驗證，並以<strong>降低誤報</strong>為流程的最佳化目標。這與 curl、FFmpeg 的案例（CH03）指向同一個結論：<strong>負責任的自動化必須把驗證成本留在自己身上，而不是轉嫁給維護者。</strong></li>
+  </ul>
+
+  <a class="toplink" href="#toc">↑ 回目錄</a>
+</section>
+
+<!-- ===================== 9 ===================== -->
+<section id="ch9">
+  <h2 class="ch"><span class="num">CH 09</span>延伸資源清單 <span class="en">Further Resources</span></h2>
+
+  <h3>9.1 競賽與評測平台</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>名稱</th><th>性質</th><th>連結</th></tr></thead>
+      <tbody>
+        <tr><td>DARPA AI Cyber Challenge（AIxCC）</td><td>自動化漏洞發現與修補競賽；已完賽，成果開源</td><td class="mono"><a href="https://archive.aicyberchallenge.com/">archive.aicyberchallenge.com</a></td></tr>
+        <tr><td>CyberGym</td><td>真實世界漏洞重現與發現 benchmark</td><td class="mono"><a href="https://www.cybergym.io/">cybergym.io</a></td></tr>
+        <tr><td>Cybench</td><td>以 CTF 題目評估 LLM 資安能力的框架</td><td class="mono"><a href="https://cybench.github.io/">cybench.github.io</a></td></tr>
+        <tr><td>SEC-bench</td><td>真實軟體安全任務的自動化評測（NeurIPS 2025）</td><td class="mono"><a href="https://github.com/SEC-bench/SEC-bench">github.com/SEC-bench/SEC-bench</a></td></tr>
+        <tr><td>OSS-Fuzz</td><td>Google 的大規模持續 fuzzing 基礎設施</td><td class="mono"><a href="https://google.github.io/oss-fuzz/">google.github.io/oss-fuzz</a></td></tr>
+        <tr><td>Frontier AI Cybersecurity Observatory</td><td>追蹤 AI 在攻防資安任務上的表現（live leaderboard）</td><td class="mono"><a href="https://rdi.berkeley.edu/frontier-ai-impact-on-cybersecurity/benchmarks.html">rdi.berkeley.edu/.../benchmarks.html</a></td></tr>
+        <tr><td>CTFtime</td><td>全球 CTF 賽事彙整</td><td class="mono"><a href="https://ctftime.org/">ctftime.org</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>9.2 關鍵論文與技術報告</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>作品</th><th>作者／機構</th><th>年份</th><th>核心貢獻</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Project Naptime: Evaluating Offensive Security Capabilities of Large Language Models</td>
+          <td>Google Project Zero</td><td>2024-06</td>
+          <td>LLM + 工具迴圈框架；CyberSecEval2 上改善 SOTA</td>
+        </tr>
+        <tr>
+          <td>From Naptime to Big Sleep: Using Large Language Models To Catch Vulnerabilities In Real-World Code</td>
+          <td>Big Sleep team（Project Zero × DeepMind）</td><td>2024-11</td>
+          <td>SQLite 首個由 AI agent 發現的真實世界可觸發記憶體安全漏洞</td>
+        </tr>
+        <tr>
+          <td>Cybench: A Framework for Evaluating Cybersecurity Capabilities and Risks of Language Models</td>
+          <td>Andy K. Zhang 等</td><td>ICLR 2025</td>
+          <td>CTF 導向的 LLM 資安能力評測框架</td>
+        </tr>
+        <tr>
+          <td>CyberGym: Evaluating AI Agents' Cybersecurity Capabilities with Real-World Vulnerabilities at Scale</td>
+          <td>Zhun Wang、Tianneng Shi、Jingxuan He、Matthew Cai、Jialin Zhang、Dawn Song（UC Berkeley）</td><td>2025（arXiv:2506.02548）</td>
+          <td>1,507 漏洞 / 188 專案；執行導向評測；發現 35 個 0day 與 17 個不完整修補</td>
+        </tr>
+        <tr>
+          <td>Building AI for cyber defenders</td>
+          <td>Anthropic Frontier Red Team</td><td>2025-10</td>
+          <td>Claude Sonnet 4.5 的防禦導向能力強化與 Cybench / CyberGym 完整評測數據</td>
+        </tr>
+        <tr>
+          <td>SEC-bench: Automated Benchmarking of LLM Agents on Real-World Software Security Tasks</td>
+          <td>Hwiwon Lee、Ziqi Zhang、Hanxiao Lu、Lingming Zhang</td><td>NeurIPS 2025</td>
+          <td>首個全自動的真實安全工程任務評測框架；每實例成本 0.87 美元；SOTA agent 的 PoC 生成上限 18.0%、修補上限 34.0%</td>
+        </tr>
+        <tr>
+          <td>VulnLLM-R: Specialized Reasoning LLM with Agent Scaffold for Vulnerability Detection</td>
+          <td>Yuzhou Nie、Hongwei Li、Chengquan Guo、Ruizhe Jiang、Zhun Wang、Bo Li、Dawn Song、Wenbo Guo（UCSB、UChicago、UC Berkeley、UIUC）</td><td>2025（arXiv:2512.07533）</td>
+          <td>首個專為漏洞偵測訓練的 7B 推理模型 + CodeQL 情境檢索 agent；在 5 個熱門 repo 發現 15 個 zero-day；勝過 CodeQL 與 AFL++</td>
+        </tr>
+        <tr>
+          <td>Teams of LLM Agents can Exploit Zero-Day Vulnerabilities（HPTSA）</td>
+          <td>Yuxuan Zhu、Antony Kellermann、Akul Gupta、Philip Li、Richard Fang、Rohan Bindu、Daniel Kang</td><td>EACL 2026（pp. 23–35）</td>
+          <td>以「規劃 agent + subagent 團隊」攻擊真實世界 zero-day；自建 14 個真實漏洞 benchmark，較先前 agent 框架最高提升 4.3 倍</td>
+        </tr>
+        <tr>
+          <td>Understanding Gaps in LLM Pipelines Towards Scalable Fuzzing Harness Generation（早期版本名為 HarnessAgent）</td>
+          <td>Kang Yang、Yunhang Zhang、Zichuan Li、Guanhong Tao、Jun Xu、Xiaojing Liao（University of Utah、UIUC）</td><td>2025（arXiv:2512.03420，v5 於 2026-10 修訂）</td>
+          <td>LLM harness 生成框架的實證研究；揭露「偽造函式定義繞過編譯」等驗證缺口；強化後三 shot 成功率 C 87%／C++ 81%，發現 15 個新漏洞</td>
+        </tr>
+        <tr>
+          <td>Survey of repository-level static vulnerability detection: from rule-driven to LLM and agent<br><span style="font-size:13px;color:#4a5768;">中文原名：仓库级静态漏洞检测综述：从规则驱动到大语言模型与智能体</span></td>
+          <td>宋铮、杨芮淇、李化成（公安部第三研究所；武漢大學國家網絡安全學院）</td><td>2026，《信息网络安全》（Netinfo Security）第 26 卷第 9 期，頁 1369–1382，DOI 10.3969/j.issn.1671-1122.2026.09.004</td>
+          <td>倉庫級靜態漏洞偵測的技術代際演進綜述（規則驅動 → 機器學習／深度學習 → LLM 與智能體）；歸納 6 類核心挑戰（含上下文規模超限、跨文件依賴斷裂、誤報控制困難）；評估靜態分析工具與 LLM 集成、智能體協同檢測的能力邊界；並剖析「概率推理與形式化約束衝突」造成的可信性瓶頸</td>
+        </tr>
+        <tr>
+          <td>LLMs in Software Security: A Survey of Vulnerability Detection Techniques and Insights</td>
+          <td>ACM Computing Surveys（DOI 10.1145/3769082）</td><td>2025</td>
+          <td>LLM 用於漏洞偵測的技術整理與洞見</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>9.3 開源專案</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>專案</th><th>用途</th><th>連結</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">google/oss-fuzz-gen</td><td>LLM 驅動的 OSS-Fuzz fuzz target 生成</td><td class="mono"><a href="https://github.com/google/oss-fuzz-gen">github.com/google/oss-fuzz-gen</a></td></tr>
+        <tr><td class="mono">google/oss-fuzz</td><td>大規模 fuzzing 基礎設施</td><td class="mono"><a href="https://github.com/google/oss-fuzz">github.com/google/oss-fuzz</a></td></tr>
+        <tr><td class="mono">AFLplusplus/AFLplusplus</td><td>業界標準 coverage-guided fuzzer</td><td class="mono"><a href="https://github.com/AFLplusplus/AFLplusplus">github.com/AFLplusplus/AFLplusplus</a></td></tr>
+        <tr><td class="mono">llvm/llvm-project (libFuzzer)</td><td>In-process coverage-guided fuzzer</td><td class="mono"><a href="https://llvm.org/docs/LibFuzzer.html">llvm.org/docs/LibFuzzer.html</a></td></tr>
+        <tr><td class="mono">github/codeql</td><td>語意程式碼查詢引擎</td><td class="mono"><a href="https://github.com/github/codeql">github.com/github/codeql</a></td></tr>
+        <tr><td class="mono">semgrep/semgrep</td><td>輕量靜態分析與自訂規則</td><td class="mono"><a href="https://github.com/semgrep/semgrep">github.com/semgrep/semgrep</a></td></tr>
+        <tr><td class="mono">All-Hands-AI/OpenHands</td><td>通用 coding agent 框架（CyberGym 使用的 agent 之一）</td><td class="mono"><a href="https://github.com/All-Hands-AI/OpenHands">github.com/All-Hands-AI/OpenHands</a></td></tr>
+        <tr><td class="mono">Team-Atlanta/aixcc-afc-atlantis</td><td>AIxCC 冠軍隊伍 CRS 公開元件（Atlantis）</td><td class="mono"><a href="https://github.com/Team-Atlanta/aixcc-afc-atlantis">github.com/Team-Atlanta/aixcc-afc-atlantis</a></td></tr>
+        <tr><td class="mono">trailofbits/buttercup</td><td>AIxCC 亞軍 CRS；含可在筆電執行的 standalone 版本（有四個主要元件、7 個 patch 生成 agent）</td><td class="mono"><a href="https://github.com/trailofbits/buttercup">github.com/trailofbits/buttercup</a></td></tr>
+        <tr><td class="mono">OSS-CRS（arXiv:2603.08566）</td><td>本地可部署、可組合跨隊 CRS 技術的框架；採 OSS-Fuzz 目標介面、含 LLM 預算管理</td><td class="mono"><a href="https://arxiv.org/abs/2603.08566">arxiv.org/abs/2603.08566</a></td></tr>
+        <tr><td class="mono">DARPA-AIxCC/asc-crs-healing-touch</td><td>AIxCC CRS 相關開源元件</td><td class="mono"><a href="https://github.com/DARPA-AIxCC/asc-crs-healing-touch">github.com/DARPA-AIxCC/asc-crs-healing-touch</a></td></tr>
+        <tr><td class="mono">provos/ironcurtain</td><td>開源 orchestration 框架（FSM 工作流 + append-only journal）；實證「能力在 harness 而非模型」</td><td>以 YAML 定義工作流，接上商用或開源權重模型跑 <code>vuln-discovery</code> 流程</td></tr>
+        <tr><td class="mono">SEC-bench/SEC-bench</td><td>真實安全工程任務的自動化評測（PoC 生成與修補）</td><td class="mono"><a href="https://github.com/SEC-bench/SEC-bench">github.com/SEC-bench/SEC-bench</a></td></tr>
+        <tr><td class="mono">ucsb-mlsec/VulnLLM-R</td><td>7B 專用漏洞偵測推理模型與 agent scaffold</td><td class="mono"><a href="https://github.com/ucsb-mlsec/VulnLLM-R">github.com/ucsb-mlsec/VulnLLM-R</a></td></tr>
+        <tr><td class="mono">Buttercup（Trail of Bits）</td><td>AIxCC 亞軍隊伍的 CRS（Cyber Reasoning System）</td><td class="mono"><a href="https://github.com/trailofbits/buttercup">github.com/trailofbits/buttercup</a></td></tr>
+        <tr><td class="mono">OSS-Fuzz Fuzz Introspector</td><td>Fuzz target 覆蓋率缺口分析</td><td class="mono"><a href="https://google.github.io/oss-fuzz/advanced-topics/fuzz-introspector/">google.github.io/oss-fuzz (Fuzz Introspector)</a></td></tr>
+        <tr><td class="mono">DVWA</td><td>Web 漏洞練習靶場</td><td class="mono"><a href="https://github.com/digininja/DVWA">github.com/digininja/DVWA</a></td></tr>
+        <tr><td class="mono">OWASP Juice Shop</td><td>現代 Web/API 漏洞靶場</td><td class="mono"><a href="https://github.com/juice-shop/juice-shop">github.com/juice-shop/juice-shop</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>9.4 社群與持續追蹤</h3>
+  <ul>
+    <li><strong>Google Project Zero Blog</strong>：<a href="https://projectzero.google/">projectzero.google</a> —— 深度漏洞研究與 RCA，是理解「真實漏洞長什麼樣」的最佳來源。</li>
+    <li><strong>Google Online Security Blog</strong>：<a href="https://security.googleblog.com/">security.googleblog.com</a> —— OSS-Fuzz 與 AI fuzzing 的官方進展。</li>
+    <li><strong>Anthropic Frontier Red Team</strong>：<a href="https://red.anthropic.com/">red.anthropic.com</a> —— AI 資安能力的評測與前沿研究。</li>
+    <li><strong>Berkeley RDI（Center for Responsible, Decentralized Intelligence）</strong>：<a href="https://rdi.berkeley.edu/">rdi.berkeley.edu</a> —— CyberGym 與 Frontier AI 資安影響分析。</li>
+    <li><strong>OSS-Fuzz 社群</strong>：透過 Google Group 與 GitHub issue 參與，是進入真實 fuzzing 工作流的最低門檻入口。</li>
+    <li><strong>OSV（Open Source Vulnerabilities）</strong>：<a href="https://osv.dev/">osv.dev</a> —— 開源生態系的漏洞資料庫，方便建立自己的資料集。</li>
+    <li><strong>NVD / CVE</strong>：<a href="https://nvd.nist.gov/">nvd.nist.gov</a>、<a href="https://www.cve.org/">cve.org</a> —— 標準漏洞編號與評分。</li>
+    <li><strong>MITRE CWE</strong>：<a href="https://cwe.mitre.org/">cwe.mitre.org</a> —— 弱點分類體系與 Top 25 清單。</li>
+    <li><strong>OWASP</strong>：<a href="https://owasp.org/">owasp.org</a> —— Web 安全與工具（ZAP 等）的社群中心。</li>
+    <li><strong>DEF CON / Black Hat</strong>：<a href="https://defcon.org/">defcon.org</a>、<a href="https://www.blackhat.com/">blackhat.com</a> —— AIxCC 決賽舉辦場地，也是最新研究發表的場域。</li>
+  </ul>
+
+  <h3>9.5 本報告的資訊品質說明</h3>
+  <div class="box note">
+    <span class="t">證據分級</span>
+    <b>（A）已逐字核實原始來源：</b>
+    Big Sleep 的 SQLite 漏洞細節與方法（Project Zero 原文）、CyberGym 的規模與實驗數據（Berkeley RDI 官方部落格）、Anthropic 的 Cybench／CyberGym 評測數據（原文）、XBOW 的公開自述、<b>SEC-bench</b>（NeurIPS 2025 proceedings 摘要：每實例 0.87 美元、PoC 18.0%／修補 34.0%）、<b>VulnLLM-R</b>（arXiv 全文：7B、雙教師蒸餾、15 個 zero-day、GRPO 導致 FN 上升）、<b>HarnessAgent／Harness 生成研究</b>（arXiv HTML v5 全文：243 函式、C 87%／C++ 81%、15 個新漏洞、偽造定義問題）、<b>OSS-CRS</b>（arXiv 全文：三個部署障礙、每隊 5 萬美元額度、每小時逾 1,000 美元、10 個新 bug）、<b>Buttercup 開源</b>（Trail of Bits 官方部落格：四大元件、7 個 patch agent、驗證條件）、<b>Netinfo Security 綜述</b>（期刊官網文章頁與第 26 卷第 9 期目錄：作者、卷期、頁碼、ISSN）、<b>DARPA AIxCC 官方公告</b>（已透過代理取得全文，含官方編輯更正註記）、<b>APNIC Blog / Niels Provos「Finding zero-days with any model」</b>（2026-08-11 全文：IronCurtain、OpenBSD TCP SACK 複現、GLM 5.1 的 18 年整數截斷缺陷、30–150 美元成本、AUP 護欄摩擦）、<b>EACL 2026 HPTSA 論文</b>（ACL Anthology 摘要：14 個真實漏洞 benchmark、最高 4.3 倍提升）、<b>Anthropic「Evaluating and mitigating the growing risk of LLM-discovered 0-days」</b>（2026-02-05 原文全文：500+ 高嚴重性漏洞、VM 零客製化設定、GhostScript／OpenSC／CGIF 三案例、90 天窗口評論、probes 防護）、<b>VulnCheck H1 2026 報告</b>（經 Infosecurity Magazine 2026-07-29 報導：1,061 個 AI 發現漏洞中 14 個被利用、23,000→126→1 漏斗、KEV 中位時間 120→80 天）、<b>Google Online Security Blog「Leveling Up Fuzzing」</b>（2024-11-20 一手原文全文：作者 Oliver Chang／Dongge Liu／Jonathan Metzman；26 個新漏洞、272 個專案 up from 160、370k+ 行、單專案 7,000%、8 年逾 11,000 個漏洞、「前四步已自動化」、行覆蓋率非無 bug 保證）。<br>
+    <b>（A-）已核實但來自媒體轉述，或需注意版本：</b>
+    AIxCC 決賽的文字細節（各隊使用模型、Theori 的 48 步 exploit chain、單位成本、修補時間）部分來自 Infosecurity Magazine 與 CyberScoop 的現場報導。OSS-Fuzz AI 所使用的模型為 <b>Vertex AI</b>，此點來自 Google 官方 <code>oss-fuzz-gen</code> repo 的「Bugs Discovered」表（屬 Google 一手資料，但非部落格原文——部落格原文只寫 "LLM"，未指名模型）。該部落格原文另有<strong>兩項常被誤引、實際並不存在的數據</strong>，已在 CH03 標明。<br>
+    <b>（B）僅確認到索引或摘要頁面，未逐字核對全文：</b>
+    OSS-Fuzz AI 部落格原文（<code>security.googleblog.com</code>）、Netinfo Security 論文的 PDF 全文（PDF 端點回 HTTP 403，第三方資料庫未見收錄）。<br>
+    <b>（C）已釐清的疑點：</b>
+    ①「DOI 含 2026 是否為未來／偽造」——已確認該論文於 2026-09 正式出刊、DOI 由期刊官網標示，但無法經 doi.org 解析（屬中國中文 DOI 體系）。②「AIxCC 分母為 70 或 63」——已由 DARPA 官方編輯註記確認更正為 <b>63</b>。凡標示「待核實」處，請以原始論文或官方頁面為準再行引用。
+  </div>
+  <div class="box warn">
+    <span class="t">本次核實過程中無法取得的來源（誠實記錄）</span>
+    <code>https://www.darpa.mil/news/2025/aixcc-results</code> → 直接抓取 <code>Error: getaddrinfo EAI_AGAIN www.darpa.mil</code>（DNS 解析失敗）；<b>後改用代理 <code>api.allorigins.win/raw?url=...</code> 成功取得全文</b>，官方更正註記即由此確認<br>
+    <code>https://security.googleblog.com/2024/11/leveling-up-fuzzing-finding-more.html</code>（含 <code>?version=v1</code>、<code>?m=1</code>、<code>?m=0&hl=ko</code> 等變體）→ 當時 <code>TypeError: fetch failed</code>；<b>後於網路條件改善後成功取得一手全文（HTTP 200）</b>，本報告的 OSS-Fuzz 條目已全數改用原文數字與逐字引述<br>
+    <code>https://aicyberchallenge.com/</code> 與 <code>/Finals-winners-announcement/</code> → HTTP 403（Cloudflare 攔截）；經多個代理亦失敗（520／522）<br>
+    <code>https://web.archive.org/</code> 全站（含 CDX API、<code>archive.org/wayback/available</code>、<code>archive.ph</code>）→ 全部 <code>TypeError: fetch failed</code><br>
+    <code>https://therecord.media/darpa-ai-code-competition-winner-def-con</code> → HTTP 403（Cloudflare 阻擋）<br>
+    <code>https://www.darkreading.com/application-security/darpa-announces-ai-cyber-challenge-finalists</code> → HTTP 200 但內容被截斷<br>
+    <code>https://raw.githubusercontent.com/adamghaida/ai-hall-of-fame/.../aixcc-final-2025/README.md</code> → <code>TypeError: fetch failed</code><br>
+    Netinfo Security 論文 PDF 端點（<code>downloadArticleFile.do?...</code>）→ HTTP 403 Forbidden (nginx)
+  </div>
+
+  <a class="toplink" href="#toc">↑ 回目錄</a>
+</section>
+
+<!-- ===================== refs ===================== -->
+<section id="refs" class="refs">
+  <h2 class="ch"><span class="num">REF</span>參考連結（完整 URL） <span class="en">References</span></h2>
+  <ol>
+    <li>Google Project Zero — <em>Project Naptime: Evaluating Offensive Security Capabilities of Large Language Models</em>（2024-06）<br><a href="https://projectzero.google/2024/06/project-naptime.html">https://projectzero.google/2024/06/project-naptime.html</a></li>
+    <li>Google Project Zero / Big Sleep team — <em>From Naptime to Big Sleep: Using Large Language Models To Catch Vulnerabilities In Real-World Code</em>（2024-11-01）<br><a href="https://projectzero.google/2024/10/from-naptime-to-big-sleep.html">https://projectzero.google/2024/10/from-naptime-to-big-sleep.html</a></li>
+    <li>SQLite — 對應修補 commit（<code>41d58a014ce89356</code>）<br><a href="https://sqlite.org/src/info/41d58a014ce89356">https://sqlite.org/src/info/41d58a014ce89356</a></li>
+    <li>Google Online Security Blog — <em>Leveling Up Fuzzing: Finding more vulnerabilities with AI</em>（<b>2024-11-20 一手原文，已成功取得全文</b>；作者 Oliver Chang、Dongge Liu、Jonathan Metzman，Google Open Source Security Team）<br><a href="https://security.googleblog.com/2024/11/leveling-up-fuzzing-finding-more.html">https://security.googleblog.com/2024/11/leveling-up-fuzzing-finding-more.html</a><br>（2023-08 起點宣告：<a href="https://security.googleblog.com/2023/08/ai-powered-fuzzing-breaking-bug-hunting.html">https://security.googleblog.com/2023/08/ai-powered-fuzzing-breaking-bug-hunting.html</a>）</li>
+    <li>TechRadar — <em>Google's AI-powered bug hunting tool finds a host of concerning open source security flaws</em>（含多段直接引述原文）<br><a href="https://www.techradar.com/pro/security/googles-ai-powered-bug-hunting-tool-finds-a-host-of-concerning-open-source-security-flaws">https://www.techradar.com/pro/security/googles-ai-powered-bug-hunting-tool-finds-a-host-of-concerning-open-source-security-flaws</a></li>
+    <li>The Hacker News（Ravie Lakshmanan）— <em>Google's AI-Powered OSS-Fuzz Tool Finds 26 Vulnerabilities</em>（2024-11-21）<br><a href="https://thehackernews.com/2024/11/googles-ai-powered-oss-fuzz-tool-finds.html">https://thehackernews.com/2024/11/googles-ai-powered-oss-fuzz-tool-finds.html</a></li>
+    <li>ReversingLabs — <em>Automated AI fuzzing targets open source vulnerabilities</em>（2024-12；<b>注意</b>：該文將 OpenSSL 漏洞誤稱為 "critical"，與原文及 NVD 的 medium/4.3 不符）<br><a href="https://www.reversinglabs.com/blog/automated-ai-fuzzing-targets-open-source-llm-vulnerabilities">https://www.reversinglabs.com/blog/automated-ai-fuzzing-targets-open-source-llm-vulnerabilities</a></li>
+    <li>Google — <code>oss-fuzz-gen</code>（LLM powered fuzzing via OSS-Fuzz）<br><a href="https://github.com/google/oss-fuzz-gen">https://github.com/google/oss-fuzz-gen</a></li>
+    <li>Team Atlanta — <em>ASC SQLite null-pointer dereference</em><br><a href="https://team-atlanta.github.io/blog/post-asc-sqlite/">https://team-atlanta.github.io/blog/post-asc-sqlite/</a></li>
+    <li>GitHub — <code>Team-Atlanta/aixcc-afc-atlantis</code><br><a href="https://github.com/Team-Atlanta/aixcc-afc-atlantis">https://github.com/Team-Atlanta/aixcc-afc-atlantis</a></li>
+    <li>DARPA — <em>AI Cyber Challenge marks pivotal inflection point for cyber defense</em>（2025-08-08；<b>官方公告，含分母 70→63 的編輯更正註記</b>）<br>原始網址（本次 DNS 失敗）：<a href="https://www.darpa.mil/news/2025/aixcc-results">https://www.darpa.mil/news/2025/aixcc-results</a><br>實際取得途徑（代理）：<a href="https://api.allorigins.win/raw?url=https%3A%2F%2Fwww.darpa.mil%2Fnews%2F2025%2Faixcc-results">https://api.allorigins.win/raw?url=https%3A%2F%2Fwww.darpa.mil%2Fnews%2F2025%2Faixcc-results</a></li>
+    <li>ARPA-H — <em>ARPA-H, DARPA challenge showcases AI's power to secure America's health care</em><br><a href="https://arpa-h.gov/news-and-events/arpa-h-darpa-challenge-showcases-ais-power-secure-americas-health-care">https://arpa-h.gov/news-and-events/arpa-h-darpa-challenge-showcases-ais-power-secure-americas-health-care</a></li>
+    <li>CyberScoop — <em>DARPA AI Cyber Challenge winners announced at DEF CON</em>（C 程式庫 0day 未被自動修補、Java 11 個已修補）<br><a href="https://cyberscoop.com/darpa-ai-cyber-challenge-winners-def-con-2025/">https://cyberscoop.com/darpa-ai-cyber-challenge-winners-def-con-2025/</a></li>
+    <li>Nicholas Carlini、Keane Lucas、Evyatar Ben Asher、Newton Cheng、Hasnain Lakhani、David Forsythe、Kyla Guru（Anthropic Frontier Red Team）— <em>Evaluating and mitigating the growing risk of LLM-discovered 0-days</em>（2026-02-05；500+ 高嚴重性漏洞、VM 零客製化設定、GhostScript／OpenSC／CGIF 案例、90 天窗口評論、probes 防護）<br><a href="https://www.anthropic.com/research/zero-days">https://www.anthropic.com/research/zero-days</a></li>
+    <li>VulnCheck — <em>State of Exploitation H1 2026</em>（1,061 個 AI 發現漏洞中 14 個被利用；KEV 中位時間 120→80 天）<br><a href="https://www.vulncheck.com/blog/state-of-exploitation-1h-2026">https://www.vulncheck.com/blog/state-of-exploitation-1h-2026</a></li>
+    <li>Infosecurity Magazine — <em>Just 1% of AI-Discovered Vulnerabilities Exploited in the Wild, Research Shows</em>（2026-07-29；Project Glasswing 23,000+ 發現／126 CVE／1 個被利用）<br><a href="https://www.infosecurity-magazine.com/news/one-percent-ai-vulnerabilities/">https://www.infosecurity-magazine.com/news/one-percent-ai-vulnerabilities/</a></li>
+    <li>Berkeley Vulnerability Research Initiative（AI 發現漏洞的遙測資料來源）<br><a href="https://vuln.cs.berkeley.edu/">https://vuln.cs.berkeley.edu/</a></li>
+    <li>Anthropic — Claude Opus 4.6 發布公告與 System Card<br><a href="https://www.anthropic.com/news/claude-opus-4-6">https://www.anthropic.com/news/claude-opus-4-6</a>、<a href="https://www.anthropic.com/claude-opus-4-6-system-card">https://www.anthropic.com/claude-opus-4-6-system-card</a></li>
+    <li>Niels Provos — <em>Finding zero-days with any model</em>（2026-08-11；IronCurtain 框架、OpenBSD TCP SACK 複現、GLM 5.1 發現 18 年整數截斷缺陷、單次調查 30–150 美元、AUP 護欄摩擦）<br>APNIC Blog：<a href="https://blog.apnic.net/2026/08/11/finding-zero-days-with-any-model/">https://blog.apnic.net/2026/08/11/finding-zero-days-with-any-model/</a><br>作者原文：<a href="https://www.provos.org/p/finding-zero-days-with-any-model/">https://www.provos.org/p/finding-zero-days-with-any-model/</a><br>框架：<a href="https://github.com/provos/ironcurtain">https://github.com/provos/ironcurtain</a></li>
+    <li>Yuxuan Zhu、Antony Kellermann、Akul Gupta、Philip Li、Richard Fang、Rohan Bindu、Daniel Kang — <em>Teams of LLM Agents can Exploit Zero-Day Vulnerabilities</em>（HPTSA），EACL 2026，頁 23–35，DOI 10.18653/v1/2026.eacl-long.2<br><a href="https://aclanthology.org/2026.eacl-long.2/">https://aclanthology.org/2026.eacl-long.2/</a>、<a href="https://aclanthology.org/2026.eacl-long.2.pdf">https://aclanthology.org/2026.eacl-long.2.pdf</a></li>
+    <li>SC Media — <em>Google's AI-powered fuzzing tool discovers 26 new vulnerabilities</em>（2024-11-21；<b>取得原文前的交叉驗證來源</b>）<br><a href="https://www.scworld.com/news/googles-ai-powered-fuzzing-tool-discovers-26-new-vulnerabilities">https://www.scworld.com/news/googles-ai-powered-fuzzing-tool-discovers-26-new-vulnerabilities</a></li>
+    <li>Google Online Security Blog — <em>AI-powered fuzzing: breaking the bug hunting barrier</em>（2023-08，OSS-Fuzz AI 化的起點）<br><a href="https://security.googleblog.com/2023/08/ai-powered-fuzzing-breaking-bug-hunting.html">https://security.googleblog.com/2023/08/ai-powered-fuzzing-breaking-bug-hunting.html</a></li>
+    <li>NVD — CVE-2024-9143（OpenSSL out-of-bounds read/write，<b>CVSS 4.3 medium</b>；潛伏約 20 年後由 AI 生成的 fuzz target 發現）<br><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-9143">https://nvd.nist.gov/vuln/detail/CVE-2024-9143</a></li>
+    <li>AIxCC Competition Archive — 七隊 CRS 開源清單與 23 個 challenge repo<br><a href="https://archive.aicyberchallenge.com/">https://archive.aicyberchallenge.com/</a>、<a href="https://archive.aicyberchallenge.com/challenges/">https://archive.aicyberchallenge.com/challenges/</a></li>
+    <li>宋铮、杨芮淇、李化成 — <em>仓库级静态漏洞检测综述：从规则驱动到大语言模型与智能体</em>（Survey of repository-level static vulnerability detection: from rule-driven to LLM and agent），《信息网络安全》（Netinfo Security），2026，第 26 卷第 9 期，頁 1369–1382，DOI 10.3969/j.issn.1671-1122.2026.09.004（<b>該 DOI 目錄於中國中文 DOI 體系，無法經 doi.org 解析；文獻標題與期刊名為原文引用，故保留簡體</b>）<br>英文頁：<a href="http://netinfo-security.org/EN/10.3969/j.issn.1671-1122.2026.09.004">http://netinfo-security.org/EN/10.3969/j.issn.1671-1122.2026.09.004</a><br>中文頁：<a href="http://netinfo-security.org/CN/10.3969/j.issn.1671-1122.2026.09.004">http://netinfo-security.org/CN/10.3969/j.issn.1671-1122.2026.09.004</a><br>期刊 ISSN 佐證：<a href="https://portal.issn.org/resource/ISSN/1671-1122">https://portal.issn.org/resource/ISSN/1671-1122</a></li>
+    <li>AIxCC Competition Archive<br><a href="https://archive.aicyberchallenge.com/">https://archive.aicyberchallenge.com/</a></li>
+    <li>KAIST（EurekAlert 發布）— <em>Team Atlanta won the DARPA AI Cyber Challenge</em>（2025-08-09）<br><a href="https://www.eurekalert.org/news-releases/1094256">https://www.eurekalert.org/news-releases/1094256</a></li>
+    <li>GitHub — <code>DARPA-AIxCC/asc-crs-healing-touch</code><br><a href="https://github.com/DARPA-AIxCC/asc-crs-healing-touch">https://github.com/DARPA-AIxCC/asc-crs-healing-touch</a></li>
+    <li>UC Berkeley RDI — <em>CyberGym: Evaluating AI Agents' Real-World Cybersecurity Capabilities at Scale</em>（2025-10-08）<br><a href="https://rdi.berkeley.edu/blog/cybergym/">https://rdi.berkeley.edu/blog/cybergym/</a></li>
+    <li>CyberGym — arXiv:2506.02548<br><a href="https://arxiv.org/abs/2506.02548">https://arxiv.org/abs/2506.02548</a></li>
+    <li>CyberGym 官方網站<br><a href="https://www.cybergym.io/">https://www.cybergym.io/</a></li>
+    <li>Berkeley RDI — Frontier AI Cybersecurity Observatory（benchmarks leaderboard）<br><a href="https://rdi.berkeley.edu/frontier-ai-impact-on-cybersecurity/benchmarks.html">https://rdi.berkeley.edu/frontier-ai-impact-on-cybersecurity/benchmarks.html</a></li>
+    <li>Anthropic Frontier Red Team — <em>Building AI for cyber defenders</em>（2025-10-03）<br><a href="https://www.anthropic.com/research/building-ai-cyber-defenders">https://www.anthropic.com/research/building-ai-cyber-defenders</a></li>
+    <li>Anthropic — Claude Sonnet 4.5 System Card（CyberGym 引用來源）<br><a href="https://assets.anthropic.com/m/12f214efcc2f457a/original/Claude-Sonnet-4-5-System-Card.pdf">https://assets.anthropic.com/m/12f214efcc2f457a/original/Claude-Sonnet-4-5-System-Card.pdf</a></li>
+    <li>Anthropic Red Team — <em>AI for cyber defenders</em>（部落格）<br><a href="https://red.anthropic.com/2025/ai-for-cyber-defenders/">https://red.anthropic.com/2025/ai-for-cyber-defenders/</a></li>
+    <li>Cybench 官方網站<br><a href="https://cybench.github.io/">https://cybench.github.io/</a></li>
+    <li>Cybench — ICLR 2025 proceedings<br><a href="https://proceedings.iclr.cc/paper_files/paper/2025/hash/3e9412a9c1d93810ef3ef7825115016b-Abstract-Conference.html">https://proceedings.iclr.cc/paper_files/paper/2025/hash/3e9412a9c1d93810ef3ef7825115016b-Abstract-Conference.html</a></li>
+    <li>GitHub — <code>SEC-bench/SEC-bench</code>（NeurIPS 2025）<br><a href="https://github.com/SEC-bench/SEC-bench">https://github.com/SEC-bench/SEC-bench</a></li>
+    <li>NeurIPS 2025 — SEC-bench poster 頁面<br><a href="https://neurips.cc/virtual/2025/loc/san-diego/poster/118134">https://neurips.cc/virtual/2025/loc/san-diego/poster/118134</a></li>
+    <li>XBOW — <em>We Ran 1,060 Autonomous Attacks. Here's What the Industry Gets Wrong.</em>（2026-03-02）<br><a href="https://xbow.com/blog/we-ran-1060-autonomous-attacks">https://xbow.com/blog/we-ran-1060-autonomous-attacks</a></li>
+    <li>XBOW — <em>Top 1: How XBOW Did It</em><br><a href="https://xbow.com/blog/top-1-how-xbow-did-it">https://xbow.com/blog/top-1-how-xbow-did-it</a></li>
+    <li>International AI Safety Report 2026<br><a href="https://internationalaisafetyreport.org/publication/international-ai-safety-report-2026">https://internationalaisafetyreport.org/publication/international-ai-safety-report-2026</a></li>
+    <li>MITRE CWE Top 25（2024）<br><a href="https://cwe.mitre.org/top25/archive/2024/2024_cwe_top25.html">https://cwe.mitre.org/top25/archive/2024/2024_cwe_top25.html</a></li>
+    <li>Project Zero — 0day Root Cause Analyses（RCA）清單<br><a href="https://googleprojectzero.github.io/0days-in-the-wild/rca.html">https://googleprojectzero.github.io/0days-in-the-wild/rca.html</a></li>
+    <li>OWASP Top 10:2025（官方 2025 版；三個關鍵變化：A03 軟體供應鏈失效為新類別、A10 異常條件處理不當為新類別、A05 注入降至第 5 並合併 XSS）<br><a href="https://top10.owasp.org/2025/">https://top10.owasp.org/2025/</a><br>
+      A03 軟體供應鏈失效：<a href="https://top10.owasp.org/2025/A03_2025-Software_Supply_Chain_Failures/">https://top10.owasp.org/2025/A03_2025-Software_Supply_Chain_Failures/</a><br>
+      A10 異常條件處理不當（首要 CWE 含 CWE-209、CWE-476、CWE-636 fail-open）：<a href="https://top10.owasp.org/2025/A10_2025-Mishandling_of_Exceptional_Conditions/">https://top10.owasp.org/2025/A10_2025-Mishandling_of_Exceptional_Conditions/</a></li>
+    <li>OWASP Top 10 專案主頁（含舊版本與 metadata）<br><a href="https://github.com/OWASP/www-project-top-ten">https://github.com/OWASP/www-project-top-ten</a></li>
+    <li>OWASP WebGoat<br><a href="https://owasp.org/www-project-webgoat/">https://owasp.org/www-project-webgoat/</a></li>
+    <li>DVWA（Damn Vulnerable Web Application）<br><a href="https://github.com/digininja/DVWA">https://github.com/digininja/DVWA</a></li>
+    <li>OWASP Juice Shop<br><a href="https://github.com/juice-shop/juice-shop">https://github.com/juice-shop/juice-shop</a></li>
+    <li>PortSwigger Web Security Academy<br><a href="https://portswigger.net/web-security">https://portswigger.net/web-security</a></li>
+    <li>pwn.college<br><a href="https://pwn.college/">https://pwn.college/</a></li>
+    <li>AFL++<br><a href="https://github.com/AFLplusplus/AFLplusplus">https://github.com/AFLplusplus/AFLplusplus</a></li>
+    <li>libFuzzer 文件<br><a href="https://llvm.org/docs/LibFuzzer.html">https://llvm.org/docs/LibFuzzer.html</a></li>
+    <li>OSS-Fuzz 文件<br><a href="https://google.github.io/oss-fuzz/">https://google.github.io/oss-fuzz/</a></li>
+    <li>OSS-Fuzz — Fuzz Introspector<br><a href="https://google.github.io/oss-fuzz/advanced-topics/fuzz-introspector/">https://google.github.io/oss-fuzz/advanced-topics/fuzz-introspector/</a></li>
+    <li>The Fuzzing Book<br><a href="https://www.fuzzingbook.org/">https://www.fuzzingbook.org/</a></li>
+    <li>CodeQL 文件<br><a href="https://codeql.github.com/docs/">https://codeql.github.com/docs/</a></li>
+    <li>GitHub — CodeQL<br><a href="https://github.com/github/codeql">https://github.com/github/codeql</a></li>
+    <li>Semgrep 文件<br><a href="https://semgrep.dev/docs/">https://semgrep.dev/docs/</a></li>
+    <li>GitHub — Semgrep<br><a href="https://github.com/semgrep/semgrep">https://github.com/semgrep/semgrep</a></li>
+    <li>GitHub — OpenHands<br><a href="https://github.com/All-Hands-AI/OpenHands">https://github.com/All-Hands-AI/OpenHands</a></li>
+    <li>OSV（Open Source Vulnerabilities）<br><a href="https://osv.dev/">https://osv.dev/</a></li>
+    <li>NVD（National Vulnerability Database）<br><a href="https://nvd.nist.gov/">https://nvd.nist.gov/</a></li>
+    <li>CVE Program<br><a href="https://www.cve.org/">https://www.cve.org/</a></li>
+    <li>MITRE CWE<br><a href="https://cwe.mitre.org/">https://cwe.mitre.org/</a></li>
+    <li>OWASP<br><a href="https://owasp.org/">https://owasp.org/</a></li>
+    <li>CTFtime<br><a href="https://ctftime.org/">https://ctftime.org/</a></li>
+    <li>picoCTF<br><a href="https://picoctf.org/">https://picoctf.org/</a></li>
+    <li>HackerOne<br><a href="https://www.hackerone.com/">https://www.hackerone.com/</a></li>
+    <li>Bugcrowd<br><a href="https://www.bugcrowd.com/">https://www.bugcrowd.com/</a></li>
+    <li>DEF CON<br><a href="https://defcon.org/">https://defcon.org/</a></li>
+    <li>Black Hat<br><a href="https://www.blackhat.com/">https://www.blackhat.com/</a></li>
+    <li>ACM Computing Surveys — <em>LLMs in Software Security: A Survey of Vulnerability Detection Techniques and Insights</em>（DOI 10.1145/3769082）<br><a href="https://doi.org/10.1145/3769082">https://doi.org/10.1145/3769082</a></li>
+    <li>Yuzhou Nie 等（UCSB、UChicago、UC Berkeley、UIUC）— <em>VulnLLM-R: Specialized Reasoning LLM with Agent Scaffold for Vulnerability Detection</em>（arXiv:2512.07533；7B 雙教師蒸餾、15 個 zero-day、GRPO 導致 false negative 上升）<br><a href="https://arxiv.org/abs/2512.07533">https://arxiv.org/abs/2512.07533</a>、<a href="https://github.com/ucsb-mlsec/VulnLLM-R">https://github.com/ucsb-mlsec/VulnLLM-R</a></li>
+    <li>Infosecurity Magazine — <em>#DEFCON: AI Cyber Challenge Winners Revealed in DARPA's $4M Cybersecurity Showdown</em>（2025-08-09；提供決賽現場細節：43 個修補、18 個真實漏洞、單位成本 152 美元、各隊使用模型。<b>注意：此文採更正前的分母 70 與 77%</b>）<br><a href="https://www.infosecurity-magazine.com/news/defcon-ai-cyber-challenge-winners/">https://www.infosecurity-magazine.com/news/defcon-ai-cyber-challenge-winners/</a></li>
+    <li>Trail of Bits — <em>AIxCC finals: Tale of the tape</em>（各決賽隊伍所屬機構）<br><a href="https://blog.trailofbits.com/2025/08/07/aixcc-finals-tale-of-the-tape/">https://blog.trailofbits.com/2025/08/07/aixcc-finals-tale-of-the-tape/</a></li>
+    <li>Trail of Bits — <em>Buttercup is now open-source!</em>（2025-08-08；CRS 四大元件與修補驗證條件）<br><a href="https://blog.trailofbits.com/2025/08/08/buttercup-is-now-open-source/">https://blog.trailofbits.com/2025/08/08/buttercup-is-now-open-source/</a></li>
+    <li>GitHub — <code>trailofbits/buttercup</code><br><a href="https://github.com/trailofbits/buttercup">https://github.com/trailofbits/buttercup</a></li>
+    <li>Trail of Bits — <em>Trail of Bits' Buttercup wins 2nd place in AIxCC Challenge</em>（2025-08-09）<br><a href="https://blog.trailofbits.com/2025/08/09/trail-of-bits-buttercup-wins-2nd-place-in-aixcc-challenge/">https://blog.trailofbits.com/2025/08/09/trail-of-bits-buttercup-wins-2nd-place-in-aixcc-challenge/</a></li>
+    <li>Andrew Chin 等（Georgia Tech、Microsoft）— <em>OSS-CRS: Liberating AIxCC Cyber Reasoning Systems for Real-World Open-Source Security</em>（arXiv:2603.08566；三個部署障礙、LLM 預算、curl 與 FFmpeg 案例）<br><a href="https://arxiv.org/abs/2603.08566">https://arxiv.org/abs/2603.08566</a></li>
+    <li>SEC-bench — NeurIPS 2025 proceedings 摘要頁（Hwiwon Lee、Ziqi Zhang、Hanxiao Lu、Lingming Zhang）<br><a href="https://proceedings.neurips.cc/paper_files/paper/2025/hash/a9168f1c54e5147027f1e8cf83e1a775-Abstract-Conference.html">https://proceedings.neurips.cc/paper_files/paper/2025/hash/a9168f1c54e5147027f1e8cf83e1a775-Abstract-Conference.html</a></li>
+    <li>SEC-bench — DOI <a href="https://doi.org/10.52202/085713-3878">10.52202/085713-3878</a>；Paper PDF<br><a href="https://proceedings.neurips.cc/paper_files/paper/2025/file/a9168f1c54e5147027f1e8cf83e1a775-Paper-Conference.pdf">https://proceedings.neurips.cc/paper_files/paper/2025/file/a9168f1c54e5147027f1e8cf83e1a775-Paper-Conference.pdf</a></li>
+    <li>Yuzhou Nie、Hongwei Li、Chengquan Guo、Ruizhe Jiang、Zhun Wang、Bo Li、Dawn Song、Wenbo Guo — <em>VulnLLM-R: Specialized Reasoning LLM with Agent Scaffold for Vulnerability Detection</em>（arXiv:2512.07533；15 個 zero-day、GRPO 導致 FN 上升）<br><a href="https://arxiv.org/abs/2512.07533">https://arxiv.org/abs/2512.07533</a>（全文：<a href="https://ar5iv.labs.arxiv.org/html/2512.07533">ar5iv</a>）</li>
+    <li>GitHub — <code>ucsb-mlsec/VulnLLM-R</code><br><a href="https://github.com/ucsb-mlsec/VulnLLM-R">https://github.com/ucsb-mlsec/VulnLLM-R</a></li>
+    <li>Kang Yang、Yunhang Zhang、Zichuan Li、Guanhong Tao、Jun Xu、Xiaojing Liao — <em>Understanding Gaps in LLM Pipelines Towards Scalable Fuzzing Harness Generation: An Empirical Study and Enhancement</em>（arXiv:2512.03420；早期版本題為 HarnessAgent）<br><a href="https://arxiv.org/abs/2512.03420">https://arxiv.org/abs/2512.03420</a>（全文：<a href="https://arxiv.org/html/2512.03420v5">arXiv HTML v5</a>）</li>
+    <li>AIxCC — 決賽優勝者公告（官方）<br><a href="https://aicyberchallenge.com/Finals-winners-announcement/">https://aicyberchallenge.com/Finals-winners-announcement/</a></li>
+    <li>AIxCC — 官方網站與規則文件<br><a href="https://aicyberchallenge.com/">https://aicyberchallenge.com/</a>、<a href="https://aicyberchallenge.com/storage/2024/07/AIxCC-Rules-v6-2.pdf">https://aicyberchallenge.com/storage/2024/07/AIxCC-Rules-v6-2.pdf</a></li>
+    <li>Dark Reading — <em>DARPA Announces AI Cyber Challenge Finalists</em>（2024；七隊名單）<br><a href="https://www.darkreading.com/application-security/darpa-announces-ai-cyber-challenge-finalists">https://www.darkreading.com/application-security/darpa-announces-ai-cyber-challenge-finalists</a></li>
+  </ol>
+
+  <div class="box note" style="margin-top:24px;">
+    <span class="t">免責與授權聲明</span>
+    本報告為教育與防禦研究用途的公開資料整理，內容全部來自公開來源，並在引用處標示連結。報告不含任何針對特定真實目標的攻擊步驟或可直接利用的 exploit。所有實作練習均應在自身擁有或已取得明確授權的環境中進行；未經授權的存取行為可能觸犯刑法與相關法規。報告中標示「待核實」的項目，請以原始來源為準。本報告的資料截止時間為 2026 年 10 月，該領域進展迅速，引用前請確認最新版本。
+  </div>
+</section>
+
+<footer>
+  <p>AI 輔助漏洞挖掘（AI for Vulnerability Discovery）研究報告與學習筆記</p>
+  <p>繁體中文｜單一自包含 HTML｜內嵌 CSS｜無外部 CDN 依賴</p>
+  <p><a class="toplink" href="#toc">↑ 回到目錄</a></p>
+</footer>
+
+</div>
+</body>
+</html>

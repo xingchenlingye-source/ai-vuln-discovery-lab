@@ -1,0 +1,12 @@
+[
+  {
+    "name": "P1/P2/P3 PHAR 反序列化 → 任意寫檔",
+    "cwe": "CWE-502",
+    "present": true
+  },
+  {
+    "name": "安全對照：/safe/check 拒絕 phar://",
+    "cwe": "防護驗證",
+    "present": true
+  }
+]

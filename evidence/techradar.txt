@@ -1,0 +1,113 @@
+﻿Google's AI-powered bug hunting tool finds a host of concerning open source security flaws | TechRadar
+Become a TechRadar Insider
+Get daily news, weekly deals and the week&rsquo;s top tech stories
+Join the conversation, share your thoughts and get expert advice
+Earn badges as you explore news, deals, reviews, guides and more
+Save on gadgets, subscriptions and accessories with handpicked discounts
+Become a TechRadar Insider
+Sign up with your email below to instantly access member features, newsletters and exclusive Insider perks
+Contact me with news and offers from other Future brands
+By submitting your information you agree to the
+and are aged 16 or over.
+FIND OUT ABOUT OUR MAGAZINE
+Want to subscribe to the magazine? Click the button below to
+find out more information.
+Become a TechRadar Insider now
+Sign up with your email below to instantly access member features, newsletters and exclusive Insider perks
+Contact me with news and offers from other Future brands
+By submitting your information, you confirm you are aged 16 or over,
+. Geographical rules apply.
+Your membership journey starts here.
+Keep exploring and earning more as a member.
+Start reading to unlock your first badge
+Explore ways to get more involved as a member.
+News, deals, reviews, guides and more&hellip;
+News, deals, reviews, guides and more on the newest computing gadgets
+Your membership perks
+Start exploring exclusive deals, expert advice and more
+Unlock and manage exclusive Techradar member rewards.
+the business technology experts
+Belgi&euml; (Nederlands)
+Are you a pro? Subscribe to our newsletter
+Sign up to the TechRadar Pro newsletter to get all the top news, opinion, features and guidance your business needs to succeed!
+Become a Member in Seconds
+Unlock instant access to exclusive member features.
+Contact me with news and offers from other Future brands
+Receive email from us on behalf of our trusted partners or sponsors
+By submitting your information you agree to the
+and are aged 16 or over.
+You are now subscribed
+Your newsletter sign-up was successful
+Get full access to premium articles, exclusive features and a growing list of member rewards.
+An account already exists for this email address, please log in.
+Google's AI-powered bug hunting tool finds a host of concerning open source security flaws
+Sead Fadilpa&scaron;i&#263;
+It's a major milestone for Google's automated vulnerability finding, but still raises some worrying questions
+When you purchase through links on our site, we may earn an affiliate commission.
+Here&rsquo;s how it works
+(Image credit: Pixabay)
+Join the conversation
+Add us as a preferred source on Google
+Subscribe to our newsletter
+Google's OSS-Fuzz finds more than two dozen vulnerabilities in different open-source projects
+Among them is a vulnerability in OpenSSL that could result in RCE
+Google sees this as a major milestone in automated bug discovery
+has found 26 vulnerabilities in different
+code repositories, including a medium-severity flaw in &ldquo;the critical OpenSSL library that underpins much of internet infrastructure.&rdquo;
+This wouldn&rsquo;t be much of a news (Google helped find thousands of bugs throughout the years), if the method by which the flaws were discovered wasn&rsquo;t &ldquo;artificial&rdquo;, as the bugs were revealed using its AI-powered fuzzing tool, OSS-Fuzz.
+"These particular vulnerabilities represent a milestone for automated vulnerability finding: each was found with AI, using AI-generated and enhanced fuzz targets," Google explained in a blog post.
+Watch full video here:
+Major improvements with LLMs
+Among these 26 flaws is an OpenSSL bug tracked as CVE-2024-9143. It has a severity score of 4.3 and is described as an out-of-bounds memory write bug that can crash an app, or allow crooks to mount remote code execution (RCE)
+attacks. OpenSSL has since been upgraded to versions 3.3.3, 3.2.4, 3.1.8, 3.0.16, 1.1.1zb, and 1.0.2zl, to address the flaw.
+To make matters even more interesting, Google said the vulnerability was most likely present for two decades, &ldquo;and wouldn&rsquo;t have been discoverable with existing fuzz targets written by humans.&rdquo;
+Google benches open source bug bounty program following &lsquo;significant rise&rsquo; in AI submissions
+In open source cybersecurity, AI is kind of a problem &mdash; but it can also be a solution
+'It is possible that threat actors are finding it more accessible or efficient to use LLMs and AI tools': Google warns that AI explosion will lead to more dangerous and advanced security threats
+The bug discovery came as a result of two major improvements, the company further explained. The first one is the ability to automatically generate more relevant context in the prompts, which makes the LLM &ldquo;less likely to
+the missing details in its response.&rdquo; The second one revolves around the LLM&rsquo;s ability to emulate a typical developer&rsquo;s entire workflow, including writing, testing, and iterating on the fuzz target, as well as triaging the crashes found.
+&ldquo;Thanks to this, it was possible to further automate more parts of the fuzzing workflow. This additional iterative feedback in turn also resulted in higher quality and greater number of correct fuzz targets.&rdquo;
+Are you a pro? Subscribe to our newsletter
+Sign up to the TechRadar Pro newsletter to get all the top news, opinion, features and guidance your business needs to succeed!
+Contact me with news and offers from other Future brands
+Receive email from us on behalf of our trusted partners or sponsors
+By submitting your information you agree to the
+and are aged 16 or over.
+One of Google's "big AI" projects uncovered some serious security threats seemingly all on its own
+best endpoint protection tools
+Sead Fadilpa&scaron;i&#263;
+Social Links Navigation
+Sead is a seasoned freelance journalist based in Sarajevo, Bosnia and Herzegovina. He writes about IT (cloud, IoT, 5G, VPN) and cybersecurity (ransomware, data breaches, laws and regulations). In his career, spanning more than a decade, he&rsquo;s written for numerous media outlets, including Al Jazeera Balkans. He&rsquo;s also held several modules on content writing for Represent Communications.
+Google benches open source bug bounty program following &lsquo;significant rise&rsquo; in AI submissions
+In open source cybersecurity, AI is kind of a problem &mdash; but it can also be a solution
+'It is possible that threat actors are finding it more accessible or efficient to use LLMs and AI tools': Google warns that AI explosion will lead to more dangerous and advanced security threats
+Shock horror &mdash; AI-generated security patches fall short of actually solving all the problems they were meant to fix
+AI is changing security testing, but not all vulnerabilities are created equal
+Massive supply-chain attack sees terabytes of data leaked online
+Hackers hide behind Microsoft's own websites to get past email filters and launch phishing campaigns
+Trying to change your browser? It might be harder than you think, based on one simple thing
+Experts warn cheap Android phones are being shipped with malware built in, so be on your guard
+Microsoft Teams will soon be able to spot third-party deepfakes on your morning meeting
+In open source cybersecurity, AI is kind of a problem &mdash; but it can also be a solution
+Google says counterfeit TLS certificates of major services stolen by hackers
+Tor Project refuses to cut ties with Mullvad following controversial political donation
+'GPU pricing to climb significantly' warns a PC maker in the US
+NordVPN brings Message Protection to iPhone alongside new free scam-blocking app
+PSA: iPhone Duo Preorders open Friday &mdash; here&rsquo;s a useful trick you can use to get ahead of everybody
+Hackers hide behind Microsoft's own websites to get past email filters and launch phishing campaigns
+The last Fitbit app holdouts are being forced to switch to Google Health
+19 years ago, the iPhone broke the cell carrier business and built what we have today &mdash; and Apple's new Upgrade program could break it all over again
+Has OpenAI started the 'mathpocalypse'? Experts say AI's solving of iconic math problems may cause huge issues in the long run
+VisionQuest review: Paul Bettany and James Spader delight as the MCU&rsquo;s best new double act in emotionally rich and subversive Marvel TV show on Disney+
+Trying to change your browser? It might be harder than you think, based on one simple thing
+The Sihoo B100 is still my favorite cheap office chair &mdash; an affordable mesh ergonomic seat that beats most cheap chairs we test with its adaptive lumbar support
+Best Web Hosting Service
+Best Noise Cancelling Headphones
+Best Wireless Earbuds
+TechRadar is part of Future US Inc, an international media group and leading digital publisher.
+Visit our corporate site
+Add as a preferred source on Google
+Contact Future's experts
+Accessibility Statement
+Future US, Inc. Full 7th Floor, 130 West 42nd Street,
+Please login or signup to comment

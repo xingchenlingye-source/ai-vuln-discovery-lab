@@ -1,0 +1,27 @@
+[
+  {
+    "name": "J1+J4 JS 註解洩漏路徑 + 未授權 admin API",
+    "owasp": "A01 / CWE-540 / CWE-862",
+    "present": true
+  },
+  {
+    "name": "J2+J6 debug 端點洩漏硬編碼金鑰",
+    "owasp": "A02 / CWE-489 / CWE-321",
+    "present": true
+  },
+  {
+    "name": "J3 隱藏參數（internal_cost 外洩）",
+    "owasp": "CWE-472",
+    "present": true
+  },
+  {
+    "name": "J5 前端加密可被逆向（自行偽造請求）",
+    "owasp": "CWE-602 / A04",
+    "present": true
+  },
+  {
+    "name": "額外：未授權價格覆寫端點",
+    "owasp": "A01 / CWE-862",
+    "present": true
+  }
+]

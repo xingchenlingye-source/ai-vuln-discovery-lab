@@ -1,0 +1,32 @@
+[
+  {
+    "name": "X1 固定 XOR 金鑰（known-plaintext 偽造）",
+    "cwe": "CWE-327 / CWE-330",
+    "present": true
+  },
+  {
+    "name": "X2 XOR 金鑰重用（金鑰可被消掉）",
+    "cwe": "CWE-323",
+    "present": true
+  },
+  {
+    "name": "X3 可預測 token（時間戳 + 小隨機）",
+    "cwe": "CWE-330",
+    "present": true
+  },
+  {
+    "name": "X4 加密但無完整性驗證（可篡改）",
+    "cwe": "CWE-353",
+    "present": true
+  },
+  {
+    "name": "安全對照：HMAC 簽章阻擋篡改",
+    "cwe": "防護驗證",
+    "present": true
+  },
+  {
+    "name": "安全對照：CSPRNG token",
+    "cwe": "防護驗證",
+    "present": true
+  }
+]
