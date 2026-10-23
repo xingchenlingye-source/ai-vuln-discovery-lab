@@ -55,10 +55,11 @@ jobs:
         shell: pwsh
         run: |
           python vuln-lab/summary.py
-          $status = git status --porcelain -- vuln-lab/INDEX.md
-          if ($status) {
+          # 忽略換行符差異（.gitattributes 已統一為 LF，但 Windows checkout 可能是 CRLF）
+          $diff = git diff --ignore-cr-at-eol -- vuln-lab/INDEX.md
+          if ($diff) {
             Write-Error "INDEX.md 不是最新的，請執行 python vuln-lab/summary.py 並提交"
-            git diff -- vuln-lab/INDEX.md
+            Write-Host $diff
             exit 1
           }
           Write-Host "✓ INDEX.md 是最新的"
