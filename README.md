@@ -23,6 +23,8 @@
 | `vuln-lab/` | **22 個自建靶場**、34 份實作報告、驗證腳本 |
 | `vuln-lab/INDEX.md` | 靶場索引（由 `summary.py` 自動產生） |
 | `docs/superpowers/plans/` | 開發計畫文件 |
+| [`docs/VDP_REPORT_TEMPLATE.md`](docs/VDP_REPORT_TEMPLATE.md) | **VDP／bug bounty 報告模板**（空白模板 + 填好範例 + Impact 分級 + 檢查清單） |
+| [`docs/VDP_TARGETS.md`](docs/VDP_TARGETS.md) | 有 `SECURITY.md` 的開源專案清單（10 個，附新手友好度評估） |
 | `evidence/` | 外部資料擷取證據（原始 HTML／文字） |
 
 ### 主報告章節
