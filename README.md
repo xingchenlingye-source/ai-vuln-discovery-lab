@@ -1,5 +1,10 @@
 # AI 輔助漏洞挖掘 — 學習筆記與自建靶場
 
+[![CI](https://github.com/xingchenlingye-source/ai-vuln-discovery-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/xingchenlingye-source/ai-vuln-discovery-lab/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
+[![Labs](https://img.shields.io/badge/labs-22-informational.svg)](vuln-lab/INDEX.md)
+
 > **教育用途的漏洞研究專案。所有測試只在 `127.0.0.1` 的自建靶場上進行，未接觸任何真實外部目標。**
 
 本專案記錄「AI 輔助漏洞挖掘」的完整學習路徑：從 OWASP Top 10 理論、自建靶場實作、
