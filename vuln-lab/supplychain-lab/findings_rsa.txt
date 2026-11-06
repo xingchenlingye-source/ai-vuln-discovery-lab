@@ -1,4 +1,4 @@
-﻿
+
 ##############################################################################
 # 非對稱簽章與信任鏈 — 完整示範
 ##############################################################################
@@ -7,9 +7,9 @@
  產生金鑰（RSA-2048）
 ==============================================================================
  正在產生根 CA 金鑰（質數搜尋可能需要數秒）...
-  ✓ 根 CA 金鑰：C:\Users\1\.dsh\dsh_orb\請產出一份繁體中文的研究報告-學習筆記-主題-ai-輔助漏洞挖掘-ai-for-2\vuln-lab\supplychain-lab\keys\ca_private.json
+  ✓ 根 CA 金鑰：C:\Users\Administrator\.dsh\dsh_orb\請產出一份繁體中文的研究報告-學習筆記-主題-ai-輔助漏洞挖掘-ai-for-2\vuln-lab\supplychain-lab\keys\ca_private.json
  正在產生發佈者金鑰 ...
-  ✓ 發佈者金鑰：C:\Users\1\.dsh\dsh_orb\請產出一份繁體中文的研究報告-學習筆記-主題-ai-輔助漏洞挖掘-ai-for-2\vuln-lab\supplychain-lab\keys\publisher_private.json
+  ✓ 發佈者金鑰：C:\Users\Administrator\.dsh\dsh_orb\請產出一份繁體中文的研究報告-學習筆記-主題-ai-輔助漏洞挖掘-ai-for-2\vuln-lab\supplychain-lab\keys\publisher_private.json
 ==============================================================================
 
  非對稱簽章的核心：
@@ -25,7 +25,7 @@
  簽發者    : vuln-lab root CA
  序號      : 4e6396f0f3410cec
  簽章長度  : 256 bytes
- 輸出      : C:\Users\1\.dsh\dsh_orb\請產出一份繁體中文的研究報告-學習筆記-主題-ai-輔助漏洞挖掘-ai-for-2\vuln-lab\supplychain-lab\keys\publisher_cert.json
+ 輸出      : C:\Users\Administrator\.dsh\dsh_orb\請產出一份繁體中文的研究報告-學習筆記-主題-ai-輔助漏洞挖掘-ai-for-2\vuln-lab\supplychain-lab\keys\publisher_cert.json
 ==============================================================================
 
  這份憑證的意義：
@@ -37,10 +37,10 @@
 ==============================================================================
  非對稱簽章（RSA-2048 / PKCS#1 v1.5 / SHA-256）
 ==============================================================================
- 檔案      : C:\Users\1\.dsh\dsh_orb\請產出一份繁體中文的研究報告-學習筆記-主題-ai-輔助漏洞挖掘-ai-for-2\vuln-lab\supplychain-lab\sbom.json
+ 檔案      : C:\Users\Administrator\.dsh\dsh_orb\請產出一份繁體中文的研究報告-學習筆記-主題-ai-輔助漏洞挖掘-ai-for-2\vuln-lab\supplychain-lab\sbom.json
  SHA-256   : ec2663a32ffc1df465785228b14ff10417701d368171f79d305eb3e085e4f818
  簽章長度  : 256 bytes
- 輸出      : C:\Users\1\.dsh\dsh_orb\請產出一份繁體中文的研究報告-學習筆記-主題-ai-輔助漏洞挖掘-ai-for-2\vuln-lab\supplychain-lab\sbom.json.rsa.asc
+ 輸出      : C:\Users\Administrator\.dsh\dsh_orb\請產出一份繁體中文的研究報告-學習筆記-主題-ai-輔助漏洞挖掘-ai-for-2\vuln-lab\supplychain-lab\sbom.json.rsa.asc
 ==============================================================================
 
 ==============================================================================

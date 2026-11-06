@@ -68,7 +68,7 @@ $env:PATH = "$mingw\bin;$env:PATH"
 
 ```
 ld.lld: error: cannot open output file
-  C:\Users\1\.dsh\dsh_orb\請產出一份繁體中文的研究報告-...\clab.exe: No such file or directory
+  C:\Users\Administrator\.dsh\dsh_orb\請產出一份繁體中文的研究報告-...\clab.exe: No such file or directory
 ```
 
 `ld.lld` 無法在含中文的路徑寫入輸出檔。**解法**：編譯到 ASCII 暫存目錄，
