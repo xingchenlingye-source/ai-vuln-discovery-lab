@@ -63,3 +63,6 @@ vuln-lab/**/scan_result.json
 # =============================================================================
 vuln-lab/external-lab/**
 vuln-lab/S2*_natas*.md
+
+# PHAR 任意寫檔驗證的執行產物（每次跑 verify_pharlab.py 都會重生）
+vuln-lab/pharlab/upload/

@@ -17,6 +17,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import urllib.error
@@ -27,7 +28,10 @@ import uuid
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8991
 BASE = "http://127.0.0.1:%d" % PORT
 LAB = os.path.dirname(os.path.abspath(__file__))
-PHP = os.path.join(os.environ.get("TEMP", ""), "php83", "php.exe")
+# PHP 解析順序：PHP_EXE 環境變數 → PATH 上的 php → 舊的 %TEMP%\php83 佈局（向後相容）
+PHP = (os.environ.get("PHP_EXE")
+       or shutil.which("php")
+       or os.path.join(os.environ.get("TEMP", ""), "php83", "php.exe"))
 results = []
 
 

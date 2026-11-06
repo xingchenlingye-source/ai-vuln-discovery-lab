@@ -21,6 +21,7 @@
 
 import os
 import subprocess
+import shutil
 import sys
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -29,7 +30,10 @@ from urllib.parse import urlparse
 HOST = "127.0.0.1"
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8990
 BASE = os.path.dirname(os.path.abspath(__file__))
-PERL = os.path.join(os.environ.get("TEMP", ""), "perl", "perl", "bin", "perl.exe")
+# Perl 解析順序：PERL_EXE 環境變數 → PATH 上的 perl → 舊的 %TEMP%\perl 佈局（向後相容）
+PERL = (os.environ.get("PERL_EXE")
+        or shutil.which("perl")
+        or os.path.join(os.environ.get("TEMP", ""), "perl", "perl", "bin", "perl.exe"))
 
 # 端點 → Perl 腳本
 ROUTES = {

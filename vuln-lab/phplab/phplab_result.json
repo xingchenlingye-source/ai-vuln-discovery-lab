@@ -17,7 +17,7 @@
   {
     "name": "P4 PHP 反序列化（__destruct 寫檔）",
     "cwe": "CWE-502",
-    "present": true
+    "present": false
   },
   {
     "name": "P5 Log Poisoning + LFI",
@@ -27,6 +27,6 @@
   {
     "name": "P6 SQL 截斷 + 正規化不一致",
     "cwe": "CWE-20",
-    "present": true
+    "present": false
   }
 ]

@@ -22,7 +22,7 @@
 | patched | vulnapp_v2.py | — | — | — |
 | perllab | srv.py | verify_perllab.py | perllab_result.json | 3 |
 | pharlab | pharlab.php | verify_pharlab.py | pharlab_result.json | 2 |
-| phplab | phplab.php | verify_phplab.py | phplab_result.json | 6 |
+| phplab | phplab.php | verify_phplab.py | phplab_result.json | 4 |
 | ssrflab | ssrflab.py | verify_ssrflab.py | ssrflab_result.json | 6 |
 | supplychain-lab | analyze_tree.py, analyze_tree2.py, rsa_sign.py, sbom.py, scan_deps.py | — | scan_result.json | — |
 | webvulnlab | webvulnlab.py | verify_webvulnlab.py | webvulnlab_result.json | 7 |
