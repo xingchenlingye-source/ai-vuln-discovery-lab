@@ -28,6 +28,7 @@
 | [`docs/HACKERONE_GETTING_STARTED.md`](docs/HACKERONE_GETTING_STARTED.md) | **HackerOne 入門指南**（註冊 → 讀報告 → 挑 program → 送出驗證） |
 | [`docs/TODAY_CHECKLIST.md`](docs/TODAY_CHECKLIST.md) | **今天 4 件事**（35 分鐘起步 checklist，可打勾追蹤） |
 | [`docs/DOMAIN_LOCKER_ANALYSIS.md`](docs/DOMAIN_LOCKER_ANALYSIS.md) | 開源專案靜態安全審閱範例（授權架構、無角色模型的設計取捨） |
+| [`docs/TOOLCHAIN.md`](docs/TOOLCHAIN.md) | **靶場工具鏈**（Git／clang／PHP／Perl 可攜安裝、PATH 設定、換機重建五步） |
 | `evidence/` | 外部資料擷取證據（原始 HTML／文字） |
 
 ### 主報告章節
